@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2021 Nethesis S.r.l.
+# http://www.nethesis.it - nethserver@nethesis.it
+#
+# This script is part of NethServer.
+#
+# NethServer is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License,
+# or any later version.
+#
+# NethServer is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with NethServer.  If not, see COPYING.
+#
+
+import agent
+import json
+import sys
+import subprocess
+import os
+
+request = json.load(sys.stdin)
+user = request['user']
+groups = request['groups']
+password = request.get('password', '') # Empty string implies a random password is set
+full_name = request['full_name']
+locked = request.get('locked', False)
+
+sambatool_cmd = ['podman', 'exec', '-i', os.environ['MODULE_ID'], 'samba-tool']
+adduser_cmd = sambatool_cmd + ['user', 'create', user]
+
+if not password:
+    adduser_cmd += ['--random-password']
+    inputdata = None
+else:
+    inputdata = password + "\n" + password + "\n"
+
+subprocess.run(adduser_cmd, input=inputdata, stdout=sys.stderr, check=True, text=True)
+
+if locked:
+    lock_cmd = sambatool_cmd + ['user', 'disable', user]
+    subprocess.run(lock_cmd, stdout=sys.stderr, check=True, text=True)
+
+for group in groups:
+    addmember_cmd = sambatool_cmd + ['group', 'addmembers', group, user]
+    subprocess.run(addmember_cmd, stdout=sys.stderr, check=True, text=True)
+
+if full_name:
+    setname_cmd = ['podman', 'exec', '-i', os.environ['MODULE_ID'], 'pdbedit', '-u', user, f'--fullname={full_name}']
+    subprocess.run(setname_cmd, stdout=sys.stderr, check=True, text=True)

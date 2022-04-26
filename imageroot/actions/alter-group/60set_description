@@ -1,0 +1,48 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2021 Nethesis S.r.l.
+# http://www.nethesis.it - nethserver@nethesis.it
+#
+# This script is part of NethServer.
+#
+# NethServer is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License,
+# or any later version.
+#
+# NethServer is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with NethServer.  If not, see COPYING.
+#
+
+# shellcheck disable=SC2181
+
+exec 1>&2
+
+mapfile -t params < <(jq -r ".group, .description")
+
+group="${params[0]:?group attribute not set}"
+description="${params[1]}"
+
+if [[ "${description}" == "null" ]]; then
+    exit 0
+fi
+
+dn_line=$(podman exec "${MODULE_ID}" samba-tool group show "${group}" | grep '^dn: ')
+if [[ $? != 0 ]]; then
+    echo "[ERROR] group not found: ${group}"
+    exit 1
+fi
+
+encoded_description=$(base64 -w 0 <<<"${description}")
+podman exec -i "${MODULE_ID}" ldbmodify -H /var/lib/samba/private/sam.ldb <<EOF
+${dn_line}
+changetype: modify
+replace: description
+description:: ${encoded_description}
+EOF
