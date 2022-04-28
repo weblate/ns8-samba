@@ -29,7 +29,7 @@ if [[ $provision_type == "run-dc" ]]; then
     if [[ -f "/etc/dns_forwarder" ]]; then
         extra_args+=("--option=dns forwarder=$(</etc/dns_forwarder)")
     fi
-    exec samba -i --debug-stderr "${extra_args[@]}"
+    exec samba -F --debug-stdout "${extra_args[@]}"
 elif [[ $provision_type == "join-domain" ]]; then
     echo "Joining domain ${REALM}..."
     rm -f /etc/samba/smb.conf
