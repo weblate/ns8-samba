@@ -29,6 +29,10 @@ Add group group1
     Should Contain    ${out}    u1
     Should Not Contain    ${out}    u2
 
+Group already exists
+    Run task    module/${MID1}/add-group    {"group":"group1","description":"First group","users":["u1"]}
+    ...    rc_expected=2
+
 Alter group group1
     Run task    module/${MID1}/alter-group    {"group":"group1","description":"chdesc","users":["u2"]}
 

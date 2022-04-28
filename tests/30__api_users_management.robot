@@ -29,6 +29,10 @@ Add user first.user
     Should Be Equal As Integers    ${rc}    0
     Should Contain    ${out}    first.user
 
+User already exists failure
+    Run task    module/${MID1}/add-user    {"user":"first.user","full_name":"First User","locked":false,"groups":["g1"]}
+    ...    rc_expected=2
+
 Alter user first.user
     Run task    module/${MID1}/alter-user    {"user":"first.user","full_name":"Changed full name","locked":true,"groups":["g2"]}
 
