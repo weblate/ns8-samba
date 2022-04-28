@@ -9,7 +9,7 @@ reponame="ubuntu-samba"
 container="ubuntu-working-container"
 # Prepare a local Ubuntu-based samba image
 if ! buildah inspect --type container "${container}" &>/dev/null; then
-    container=$(buildah from --name "${container}" docker.io/library/ubuntu:rolling)
+    container=$(buildah from --name "${container}" docker.io/library/ubuntu:impish) # XXX revert to :rolling
     buildah run "${container}" -- bash <<EOF
 set -e
 apt-get update
