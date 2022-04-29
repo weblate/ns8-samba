@@ -28,9 +28,9 @@ import os
 
 request = json.load(sys.stdin)
 user = request['user']
-groups = request['groups']
+groups = request.get('groups', [])
 password = request.get('password', '') # Empty string implies a random password is set
-full_name = request['full_name']
+display_name = request.get('display_name', '')
 locked = request.get('locked', False)
 
 sambatool_cmd = ['podman', 'exec', '-i', os.environ['MODULE_ID'], 'samba-tool']
@@ -52,6 +52,6 @@ for group in groups:
     addmember_cmd = sambatool_cmd + ['group', 'addmembers', group, user]
     subprocess.run(addmember_cmd, stdout=sys.stderr, check=True, text=True)
 
-if full_name:
-    setname_cmd = ['podman', 'exec', '-i', os.environ['MODULE_ID'], 'pdbedit', '-u', user, f'--fullname={full_name}']
+if display_name:
+    setname_cmd = ['podman', 'exec', '-i', os.environ['MODULE_ID'], 'pdbedit', '-u', user, f'--fullname={display_name}']
     subprocess.run(setname_cmd, stdout=sys.stderr, check=True, text=True)

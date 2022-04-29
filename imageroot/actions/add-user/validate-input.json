@@ -7,7 +7,7 @@
     "examples": [
         {
             "user": "alice",
-            "full_name": "Alice Jordan",
+            "display_name": "Alice Jordan",
             "password": "secret",
             "locked": false,
             "groups": [
@@ -16,9 +16,7 @@
         }
     ],
     "required": [
-        "user",
-        "full_name",
-        "groups"
+        "user"
     ],
     "properties": {
         "user": {
@@ -28,8 +26,8 @@
             "maxLength": 255,
             "pattern": "^[a-zA-Z][-._a-zA-Z0-9]*$"
         },
-        "full_name": {
-            "title": "Full name",
+        "display_name": {
+            "title": "Display name",
             "type": "string",
             "maxLength": 256
         },
@@ -37,7 +35,7 @@
             "title": "Initial password",
             "description": "If missing, a random password is set",
             "type": "string",
-            "minLength": 1
+            "maxLength": 256
         },
         "locked": {
             "type": "boolean",

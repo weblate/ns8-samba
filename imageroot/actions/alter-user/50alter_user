@@ -64,7 +64,7 @@ if 'groups' in request:
     for group in rem_groups:
         subprocess.run(sambatool_cmd + ['group', "removemembers", group, user], stdout=sys.stderr, check=True, text=True)
 
-if 'full_name' in request:
-    full_name = request['full_name']
-    setname_cmd = ['podman', 'exec', '-i', os.environ['MODULE_ID'], 'pdbedit', '-u', user, f'--fullname={full_name}']
+if 'display_name' in request:
+    display_name = request['display_name']
+    setname_cmd = ['podman', 'exec', '-i', os.environ['MODULE_ID'], 'pdbedit', '-u', user, f'--fullname={display_name}']
     subprocess.run(setname_cmd, stdout=sys.stderr, check=True, text=True)

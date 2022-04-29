@@ -6,8 +6,8 @@ Suite Teardown  Remove test users
 
 *** Keywords ***
 Add test users
-    Run task    module/${MID1}/add-user    {"user":"u1","groups":[],"full_name":"User One"}
-    Run task    module/${MID1}/add-user    {"user":"u2","groups":[],"full_name":"User Two"}
+    Run task    module/${MID1}/add-user    {"user":"u1","groups":[],"display_name":"User One"}
+    Run task    module/${MID1}/add-user    {"user":"u2","groups":[],"display_name":"User Two"}
 
 Remove test users
     Run task    module/${MID1}/remove-user    {"user":"u1"}

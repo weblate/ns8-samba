@@ -7,7 +7,7 @@
     "examples": [
         {
             "user": "alice",
-            "full_name": "Alice Jordan",
+            "display_name": "Alice Jordan",
             "password": "secret",
             "locked": false,
             "groups": [
@@ -25,8 +25,8 @@
             "type": "string",
             "minLength": 1
         },
-        "full_name": {
-            "title": "Full name",
+        "display_name": {
+            "title": "Display name",
             "type": "string",
             "minLength": 1,
             "maxLength": 32
