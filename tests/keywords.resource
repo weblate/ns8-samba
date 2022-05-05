@@ -43,7 +43,7 @@ RootDSE is correct
     Should Contain    ${out}    namingContexts: ${DOMSUFFIX}    ignore_case=${TRUE}
 
 Start the client tool container
-    Execute Command    podman run --env=LDAPTLS_REQCERT=never --rm --replace --detach --network host --name ldapclient alpine sh -c 'sleep 100000' ; podman exec -i ldapclient apk add openldap-clients
+    Execute Command    podman run --env\=LDAPTLS_REQCERT\=never --rm --replace --detach --network host --name ldapclient alpine sh -c 'sleep 100000' ; podman exec -i ldapclient apk add openldap-clients
 
 Stop the client tool container
     Execute Command    podman kill ldapclient
