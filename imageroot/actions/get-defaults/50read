@@ -78,17 +78,30 @@ with subprocess.Popen(["ip", "-j", "-4", "address", "show"], stdout=subprocess.P
             # skip interface without bcast address; wg0 is handled specially
             if iface["ifname"] != "wg0" and not 'BROADCAST' in iface["flags"]:
                 continue
+            # skip CNI interfaces
+            if iface["ifname"].startswith('cni-'):
+                continue
         except KeyError:
             pass
+
+        ifip_list = [] # this list collects private ip addresses for iface
         for ainfo in iface['addr_info']:
             addr = ipm.ip_address(ainfo['local'])
             if addr.is_private and not (addr.is_unspecified or addr.is_reserved or addr.is_loopback or addr.is_link_local):
                 altnames = ""
                 if 'altnames' in iface:
                     altnames = f" ({', '.join(iface['altnames'])})"
-                response['ipaddress_list'].append({
+                ifip_list.append({
                     "ipaddress": ainfo['local'],
                     "label": iface['ifname'] + altnames
                 })
+            else:
+                # If the interface has at least a non-private
+                # address, ignore it completely
+                break
+        else:
+            # If the loop completes without breaking, add collected
+            # ip addresses to the response list
+            response['ipaddress_list'] += ifip_list
 
 json.dump(response, fp=sys.stdout)
