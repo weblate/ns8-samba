@@ -38,6 +38,7 @@ adminpass="${input[1]:?}"
     --env NBDOMAIN \
     --env REALM \
     --env IPADDRESS \
+    --env PREFIXLEN \
     --env SVCPASS \
     --env SVCUSER \
     --hostname=${HOSTNAME:?} \

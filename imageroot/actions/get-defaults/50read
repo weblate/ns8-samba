@@ -74,6 +74,12 @@ else:
 
 with subprocess.Popen(["ip", "-j", "-4", "address", "show"], stdout=subprocess.PIPE) as proc:
     for iface in json.load(proc.stdout):
+        try:
+            # skip interface without bcast address; wg0 is handled specially
+            if iface["ifname"] != "wg0" and not 'BROADCAST' in iface["flags"]:
+                continue
+        except KeyError:
+            pass
         for ainfo in iface['addr_info']:
             addr = ipm.ip_address(ainfo['local'])
             if addr.is_private and not (addr.is_unspecified or addr.is_reserved or addr.is_loopback or addr.is_link_local):

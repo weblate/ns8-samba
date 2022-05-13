@@ -40,7 +40,8 @@ elif [[ $provision_type == "join-domain" ]]; then
     samba-tool domain join "${REALM,,}" DC \
         -k yes \
         "--option=bind interfaces only = yes" \
-        "--option=interfaces = 127.0.0.1 ${IPADDRESS}"
+        ${PREFIXLEN:+"--option=disable netbios = yes"} \
+        "--option=interfaces = 127.0.0.1 ${IPADDRESS}${PREFIXLEN:+/}${PREFIXLEN}"
     kdestroy
 elif [[ $provision_type == "new-domain" ]]; then
     echo "Starting domain provisioning procedure..."
@@ -56,7 +57,8 @@ elif [[ $provision_type == "new-domain" ]]; then
         "--domain=${NBDOMAIN}" "--realm=${REALM}" \
         "--host-ip=${IPADDRESS}" \
         "--option=bind interfaces only = yes" \
-        "--option=interfaces = 127.0.0.1 ${IPADDRESS}"
+        ${PREFIXLEN:+"--option=disable netbios = yes"} \
+        "--option=interfaces = 127.0.0.1 ${IPADDRESS}${PREFIXLEN:+/}${PREFIXLEN}"
     if [[ -z "${usebuiltinadmin}" ]]; then
         samba-tool user create "${ADMINUSER}" <<<"${ADMINPASS}"$'\n'"${ADMINPASS}"
         samba-tool user disable administrator
