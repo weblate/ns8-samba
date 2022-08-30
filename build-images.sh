@@ -25,8 +25,12 @@ fi
 #
 container=$(buildah from "${repobase}/${reponame}")
 reponame="samba-dc"
-buildah add "${container}" scripts/entrypoint.sh /entrypoint.sh
-buildah config --cmd='' --entrypoint='[ "/bin/bash", "/entrypoint.sh" ]' "${container}"
+buildah add "${container}" samba-dc/ /
+buildah config --cmd='' \
+    --entrypoint='["/entrypoint.sh"]' \
+    --volume=/var/lib/samba \
+    --volume=/etc/samba \
+    "${container}"
 buildah commit "${container}" "${repobase}/${reponame}"
 images+=("${repobase}/${reponame}")
 
