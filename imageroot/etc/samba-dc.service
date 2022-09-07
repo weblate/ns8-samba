@@ -25,7 +25,7 @@ ExecStart=/usr/bin/podman run \
     --cgroups=no-conmon \
     --network=host \
     --cap-drop=all \
-    --cap-add=chown,dac_override,dac_read_search,fowner,setgid,setuid,sys_admin \
+    --cap-add=chown,dac_override,dac_read_search,fowner,setgid,setuid,sys_admin,net_bind_service \
     --hostname=${HOSTNAME} \
     --log-opt=tag=${MODULE_ID} \
     --replace --name=%N \
@@ -34,6 +34,7 @@ ExecStart=/usr/bin/podman run \
     --env-file=dns_forwarder.env \
     --volume=%N-data:/var/lib/samba:Z \
     --volume=%N-config:/etc/samba:z \
+    --init \
     ${SAMBA_DC_IMAGE}
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/%N.cid -t 10
 ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/%N.cid
