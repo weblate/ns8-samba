@@ -36,3 +36,8 @@ cat - > /etc/resolv.conf <<EOF
 search ${REALM,,}
 nameserver ${IPADDRESS}
 EOF
+
+cat - > /etc/samba/include.conf <<EOF
+[global]
+log level = ${SAMBA_LOGLEVEL}
+EOF

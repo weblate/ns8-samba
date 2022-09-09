@@ -22,5 +22,6 @@ samba-tool domain join "${REALM,,}" DC \
     --use-kerberos=required \
     "--option=bind interfaces only = yes" \
     ${PREFIXLEN:+"--option=disable netbios = yes"} \
-    "--option=interfaces = 127.0.0.1 ${IPADDRESS}${PREFIXLEN:+/}${PREFIXLEN}"
+    "--option=interfaces = 127.0.0.1 ${IPADDRESS}${PREFIXLEN:+/}${PREFIXLEN}" \
+    "--option=include = /etc/samba/include.conf"
 kdestroy

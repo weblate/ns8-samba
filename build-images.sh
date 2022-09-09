@@ -28,6 +28,7 @@ reponame="samba-dc"
 buildah add "${container}" samba-dc/ /
 buildah config --cmd='' \
     --entrypoint='["/entrypoint.sh"]' \
+    --env=SAMBA_LOGLEVEL="1 auth_audit:3" \
     --volume=/var/lib/samba \
     --volume=/etc/samba \
     "${container}"
