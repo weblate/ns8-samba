@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2022 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+exec 1>&2
+set -e
+
+# Import core image URLs
+source /etc/nethserver/core.env
+
+exec podman run --rm \
+    --name="${MODULE_ID}-import_data_$$" \
+    --network=none \
+    --entrypoint=[] \
+    --volume="${MODULE_ID}-data":/var/lib/samba:Z \
+    "${RSYNC_IMAGE:?}" \
+    find /var/lib/samba -name '*.export' -exec sh -c 'mv -vf ${1} ${1%.export}' -- {} \;
