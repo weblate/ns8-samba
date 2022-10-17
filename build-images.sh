@@ -5,11 +5,12 @@ images=()
 
 repobase="${REPOBASE:-ghcr.io/nethserver}"
 reponame="ubuntu-samba"
+ubuntu_tag="devel"
 
 container="ubuntu-working-container"
 # Prepare a local Ubuntu-based samba image
 if ! buildah inspect --type container "${container}" &>/dev/null; then
-    container=$(buildah from --name "${container}" docker.io/library/ubuntu:rolling)
+    container=$(buildah from --name "${container}" docker.io/library/ubuntu:${ubuntu_tag})
     buildah run "${container}" -- bash <<EOF
 set -e
 apt-get update
@@ -25,6 +26,7 @@ fi
 #
 container=$(buildah from "${repobase}/${reponame}")
 reponame="samba-dc"
+buildah run "${container}" -- mv -v /etc/samba/smb.conf /etc/samba/smb.conf.${ubuntu_tag}
 buildah add "${container}" samba-dc/ /
 buildah config --cmd='' \
     --entrypoint='["/entrypoint.sh"]' \
