@@ -1,0 +1,32 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2022 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+set -e
+
+echo "Starting domain provisioning procedure..."
+rm -f /etc/samba/smb.conf
+# Read adminuser and pass from standard input
+IFS=$'\t' read -r adminuser adminpass < <(echo -n "${ADMINCREDS}" | base64 -d ; echo)
+if [[ "${adminuser}" == "administrator" ]]; then
+    usebuiltinadmin=1
+fi
+samba-tool domain provision \
+    --server-role=dc ${usebuiltinadmin:+--adminpass=${adminpass}} \
+    "--domain=${NBDOMAIN}" "--realm=${REALM}" \
+    "--host-ip=${IPADDRESS}" \
+    "--option=bind interfaces only = yes" \
+    ${PREFIXLEN:+"--option=disable netbios = yes"} \
+    "--option=interfaces = 127.0.0.1 ${IPADDRESS}${PREFIXLEN:+/}${PREFIXLEN}" \
+    "--option=include = /etc/samba/include.conf"
+
+if [[ -z "${usebuiltinadmin}" ]]; then
+    samba-tool user create "${adminuser}" <<<"${adminpass}"$'\n'"${adminpass}"
+    samba-tool user disable administrator
+fi
+samba-tool user setexpiry --noexpiry "${adminuser}"
+samba-tool user create "${SVCUSER}" <<<"${SVCPASS}"$'\n'"${SVCPASS}"
+samba-tool user setexpiry --noexpiry "${SVCUSER}"

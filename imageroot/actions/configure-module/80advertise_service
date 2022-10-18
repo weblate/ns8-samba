@@ -32,7 +32,6 @@ domain = os.environ['REALM'].lower()
 base_dn = 'DC=' + domain.replace('.', ',DC=')
 svcpass = os.environ['SVCPASS']
 svcuser = os.environ['SVCUSER']
-hostname = os.environ['HOSTNAME']
 ip_address = os.environ['IPADDRESS']
 
 data={

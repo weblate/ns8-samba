@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2022 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import agent
+import json
+import sys
+import ipaddress
+
+request = json.load(sys.stdin)
+
+with agent.redis_connect() as rdb:
+    cluster_network = ipaddress.ip_network(rdb.get('cluster/network'))
+
+agent.set_env('IPADDRESS', request['ipaddress'])
+if ipaddress.ip_address(request['ipaddress']) in cluster_network:
+    agent.set_env('PREFIXLEN', str(cluster_network.prefixlen))
+else:
+    agent.unset_env('PREFIXLEN')
+
+agent.dump_env()

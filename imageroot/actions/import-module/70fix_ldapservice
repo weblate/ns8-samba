@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2022 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+exec 1>&2
+set -e
+
+# Up to nethserver-dc 1.8.4, the ldapservice account has a bogus
+# userWorkstations attribute value that needs to be cleared
+# See https://github.com/NethServer/nethserver-dc/pull/113
+
+podman exec -i "${MODULE_ID}" bash -c '
+function get_dn()
+{
+  /usr/bin/ldbsearch -H /var/lib/samba/private/sam.ldb "sAMAccountName=$1" dn | \
+    sed -n "/^dn: / { s/\r// ; p ; q }"
+}
+DN=$(get_dn ldapservice)
+/usr/bin/ldbmodify -v -i -H /var/lib/samba/private/sam.ldb <<EOF
+${DN}
+changetype: modify
+replace: userWorkstations
+EOF
+'

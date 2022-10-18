@@ -5,15 +5,16 @@ images=()
 
 repobase="${REPOBASE:-ghcr.io/nethserver}"
 reponame="ubuntu-samba"
+ubuntu_tag="devel"
 
 container="ubuntu-working-container"
 # Prepare a local Ubuntu-based samba image
 if ! buildah inspect --type container "${container}" &>/dev/null; then
-    container=$(buildah from --name "${container}" docker.io/library/ubuntu:rolling)
+    container=$(buildah from --name "${container}" docker.io/library/ubuntu:${ubuntu_tag})
     buildah run "${container}" -- bash <<EOF
 set -e
 apt-get update
-apt-get -y install samba winbind krb5-user iputils-ping bzip2 ldb-tools
+apt-get -y install samba winbind krb5-user iputils-ping bzip2 ldb-tools chrony dnsutils
 apt-get clean
 find /var/lib/apt/lists/ -type f -delete
 EOF
@@ -25,8 +26,14 @@ fi
 #
 container=$(buildah from "${repobase}/${reponame}")
 reponame="samba-dc"
-buildah add "${container}" scripts/entrypoint.sh /entrypoint.sh
-buildah config --cmd='' --entrypoint='[ "/bin/bash", "/entrypoint.sh" ]' "${container}"
+buildah run "${container}" -- mv -v /etc/samba/smb.conf /etc/samba/smb.conf.${ubuntu_tag}
+buildah add "${container}" samba-dc/ /
+buildah config --cmd='' \
+    --entrypoint='["/entrypoint.sh"]' \
+    --env=SAMBA_LOGLEVEL="1 auth_audit:3" \
+    --volume=/var/lib/samba \
+    --volume=/etc/samba \
+    "${container}"
 buildah commit "${container}" "${repobase}/${reponame}"
 images+=("${repobase}/${reponame}")
 

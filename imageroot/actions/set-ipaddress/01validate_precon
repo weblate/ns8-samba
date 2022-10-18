@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2022 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# Changing the DC IP address is allowed if this module is the only
+# controller of the domain.
+
+set -e
+
+ipaddress=$(jq .ipaddress)
+
+if print-joinaddress &>/dev/null; then
+    printf "set-status validation-failed\n" >&"${AGENT_COMFD:-2}"
+    printf '[{"field":"ipaddress","parameter":"ipaddress","value":"%s","error":"peer_dc_found"}]\n' "${ipaddress}"
+    exit 2
+fi

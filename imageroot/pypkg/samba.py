@@ -38,27 +38,38 @@ class IpBindError(SambaException):
         super().__init__(self.message)
 
 def ipaddress_check(ipaddress):
+    """Run all checks together"""
+    ipaddress_check_isprivate(ipaddress)
+    ipaddress_check_isavailable(ipaddress)
+    ipaddress_check_hasfreeports(ipaddress)
+    return True
 
+def ipaddress_check_isprivate(ipaddress):
+    """The IP address must be in a private network class"""
     addr = ipm.ip_address(ipaddress)
     # See Python docs: https://docs.python.org/3.9/library/ipaddress.html#ip-addresses
     if not addr.is_private or addr.is_unspecified or addr.is_reserved or addr.is_loopback or addr.is_link_local:
         raise IpNotPrivate()
 
-    ipproc = subprocess.run(
-        ["ip", "-o", "address", "show", "to", f"{ipaddress}/32", "up"],
-        capture_output=True,
-        text=True,
-    )
+    return True
 
-    if not ipaddress in ipproc.stdout:
-        raise IpNotAvailable()
+def ipaddress_check_isavailable(ipaddress):
+    """The IP address is available and it is possible to bind a random port on it"""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sk:
+                sk.bind((ipaddress, 0))
+    except Exception as ex:
+        raise IpNotAvailable(f"Address {ipaddress} bind failed: {ex}") from ex
 
-    for xipaddr in [ipaddress, '127.0.0.1']:
-        for tcp_port in [53, 88, 636, 464, 445, 3268, 3269, 389, 135, 139]:
-            try:
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sk:
-                    sk.bind((xipaddr, tcp_port))
-            except Exception as ex:
-                raise IpBindError(xipaddr, f"Address {xipaddr}:{tcp_port} bind failed: {ex}") from ex
+    return True
+
+def ipaddress_check_hasfreeports(ipaddress):
+    """TCP ports for DC services are free on the given IP address"""
+    for tcp_port in [53, 88, 636, 464, 445, 3268, 3269, 389, 135, 139]:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sk:
+                sk.bind((ipaddress, tcp_port))
+        except Exception as ex:
+            raise IpBindError(ipaddress, f"Address {ipaddress}:{tcp_port} bind failed: {ex}") from ex
 
     return True

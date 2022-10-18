@@ -25,8 +25,14 @@ set -e
 
 readarray -t input < <(jq -r '.adminuser, .adminpass')
 
-adminuser="${input[0]:?}"
-adminpass="${input[1]:?}"
+tmpenv=$(mktemp)
+trap "rm -f ${tmpenv}" EXIT
+
+(
+    echo JOINADDRESS=$(print-joinaddress 2>/dev/null || :)
+    echo -n "ADMINCREDS="
+    echo -en "${input[0]:?}"$'\t'"${input[1]:?}" | base64
+) > ${tmpenv}
 
 /usr/bin/podman run \
     --dns=none \
@@ -35,18 +41,16 @@ adminpass="${input[1]:?}"
     --cap-drop=all \
     --cap-add=chown,dac_override,dac_read_search,fowner,setgid,setuid,sys_admin \
     --interactive \
-    --env NBDOMAIN \
-    --env REALM \
-    --env IPADDRESS \
-    --env PREFIXLEN \
-    --env SVCPASS \
-    --env SVCUSER \
+    --env=REALM \
+    --env=IPADDRESS \
+    --env=PREFIXLEN \
+    --env=NBDOMAIN \
+    --env=SVCPASS \
+    --env=SVCUSER \
+    --env-file=${tmpenv} \
     --hostname=${HOSTNAME:?} \
     --log-driver=none \
     --rm --name=${MODULE_ID}-provision \
     --volume=${MODULE_ID}-data:/var/lib/samba:Z \
     --volume=${MODULE_ID}-config:/etc/samba:z \
-    --volume=./hosts:/etc/hosts:z \
-    --volume=./resolv.conf:/etc/resolv.conf:z \
-    --volume=./krb5.conf:/etc/krb5.conf:z \
-    "${SAMBA_DC_IMAGE:?}" "${PROVISION_TYPE:?}" <<<"${adminuser}"$'\n'"${adminpass}"
+    "${SAMBA_DC_IMAGE:?}" "${PROVISION_TYPE:?}"
