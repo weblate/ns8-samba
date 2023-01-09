@@ -9,4 +9,4 @@ exec 1>&2
 set -e
 
 # Restart the NSDC service
-systemctl try-restart "${MODULE_ID}.service"
+systemctl --user try-restart samba-dc.service

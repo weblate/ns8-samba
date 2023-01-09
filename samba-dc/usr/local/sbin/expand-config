@@ -51,6 +51,7 @@ cat - >/etc/samba/smb.conf <<EOF
         server role = active directory domain controller
         workgroup = ${NBDOMAIN}
         log level = ${SAMBA_LOGLEVEL}
+        acl_xattr:security_acl_name = user.NTACL
         include = /etc/samba/include.conf
 
 [sysvol]

@@ -24,4 +24,4 @@ exec 1>&2
 set -e
 
 # Enable and start the NSDC service
-systemctl enable --now "${MODULE_ID}.service"
+systemctl --user enable --now samba-dc.service

@@ -21,6 +21,7 @@ samba-tool domain provision \
     "--option=bind interfaces only = yes" \
     ${PREFIXLEN:+"--option=disable netbios = yes"} \
     "--option=interfaces = 127.0.0.1 ${IPADDRESS}${PREFIXLEN:+/}${PREFIXLEN}" \
+    "--option=acl_xattr:security_acl_name = user.NTACL" \
     "--option=include = /etc/samba/include.conf"
 
 if [[ -z "${usebuiltinadmin}" ]]; then

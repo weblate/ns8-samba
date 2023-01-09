@@ -9,7 +9,7 @@ exec 1>&2
 set -e
 
 # Enable and start the NSDC service
-systemctl enable --now "${MODULE_ID}.service"
+systemctl --user enable --now samba-dc.service
 
 echo "Wait for DNS port to become available..."
 while ! exec 3<>/dev/tcp/${IPADDRESS}/53 || ((++attempt<15)) ; do

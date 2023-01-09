@@ -49,4 +49,4 @@ rm -rvf restore backup
 EOF
 
 # Enable and start the NSDC service
-systemctl enable --now "${MODULE_ID}.service"
+systemctl --user enable --now samba-dc.service
