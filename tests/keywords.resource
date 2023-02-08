@@ -4,7 +4,7 @@ Resource    api.resource
 Variables  vars.py
 
 *** Variables ***
-${IMAGE_URL}    http://ghrc.io/nethserver/samba:latest
+${IMAGE_URL}    http://ghcr.io/nethserver/samba:latest
 ${DOMSUFFIX}    dc\=x,dc\=y
 ${MID1}    unknown00
 ${DOMSUFFIX}    dc\=x,dc\=y
