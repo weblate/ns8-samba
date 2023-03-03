@@ -1,0 +1,18 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2022 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+me=$(testparm --suppress-prompt --parameter-name "netbios name" 2>/dev/null)
+while IFS= read -r line; do
+    role=$(echo "$line" | awk -F':' '{print $1}' | awk  '{print $1}')
+    cn=$(echo "$line" | awk -F':' '{print $2}' | awk -F',' '{gsub(/ /,""); print $2}')
+    if [[ "CN=$me" == "$cn" ]]; then
+        echo "Can't demote: the instance is retaining '$role' FSMO" >&2
+        exit 2
+    fi
+done < <(samba-tool fsmo show)
+
+exit 0
