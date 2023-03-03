@@ -19,4 +19,4 @@ echo "...done"
 
 # Ignore TSIG verify errors (exit code 2): false alarms. It is an old
 # story: https://lists.samba.org/archive/samba/2015-March/190408.html
-podman exec -i ${MODULE_ID} /usr/sbin/samba_dnsupdate --verbose || :
+podman exec -i samba-dc /usr/sbin/samba_dnsupdate --verbose || :

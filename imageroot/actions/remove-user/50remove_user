@@ -30,7 +30,7 @@ request = json.load(sys.stdin)
 user = request['user']
 
 removeuser_cmd = [
-    'podman', 'exec', os.environ['MODULE_ID'], 'samba-tool',
+    'podman', 'exec', 'samba-dc', 'samba-tool',
     'user', 'delete', user,
 ]
 subprocess.run(removeuser_cmd, stdout=sys.stderr, check=True, text=True)
