@@ -12,6 +12,8 @@ exec 1>&2
 # Try to demote the DC
 #
 
-user=$(cat /dev/stdin | jq -r '.adminuser // empty')
-password=$(cat /dev/stdin | jq -r '.adminpass // empty')
-echo "$password" | podman exec -ti samba-dc samba-tool domain demote -U"$user"
+request=$(cat /dev/stdin)
+user=$(echo "$request" | jq -r '.adminuser // empty')
+password=$(echo "$request" | jq -r '.adminpass // empty')
+server=$(echo "$request" | jq -r '.designated_survivor // empty')
+echo "$password" | podman exec -i samba-dc samba-tool domain demote --server="$server" -U"$user" &>2
