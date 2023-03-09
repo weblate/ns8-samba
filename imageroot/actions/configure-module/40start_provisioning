@@ -38,8 +38,7 @@ trap "rm -f ${tmpenv}" EXIT
     --dns=none \
     --no-hosts \
     --network=host \
-    --cap-drop=all \
-    --cap-add=chown,dac_override,dac_read_search,fowner,setgid,setuid,sys_admin \
+    --privileged \
     --interactive \
     --env=REALM \
     --env=IPADDRESS \
@@ -51,6 +50,6 @@ trap "rm -f ${tmpenv}" EXIT
     --hostname=${HOSTNAME:?} \
     --log-driver=none \
     --rm --name=${MODULE_ID}-provision \
-    --volume=${MODULE_ID}-data:/var/lib/samba:Z \
-    --volume=${MODULE_ID}-config:/etc/samba:z \
+    --volume=data:/var/lib/samba:z \
+    --volume=config:/etc/samba:z \
     "${SAMBA_DC_IMAGE:?}" "${PROVISION_TYPE:?}"

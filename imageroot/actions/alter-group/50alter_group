@@ -29,7 +29,7 @@ import os
 request = json.load(sys.stdin)
 group = request['group']
 
-sambatool_cmd = ['podman', 'exec', os.environ['MODULE_ID'], 'samba-tool']
+sambatool_cmd = ['podman', 'exec', 'samba-dc', 'samba-tool']
 
 if 'users' in request:
     new_members = set(request['users'])

@@ -29,7 +29,7 @@ import os
 request = json.load(sys.stdin)
 user = request['user']
 
-sambatool_cmd = ['podman', 'exec', '-i', os.environ['MODULE_ID'], 'samba-tool']
+sambatool_cmd = ['podman', 'exec', '-i', 'samba-dc', 'samba-tool']
 
 if 'password' in request:
     password = request['password']
@@ -66,5 +66,5 @@ if 'groups' in request:
 
 if 'display_name' in request:
     display_name = request['display_name']
-    setname_cmd = ['podman', 'exec', '-i', os.environ['MODULE_ID'], 'pdbedit', '-u', user, f'--fullname={display_name}']
+    setname_cmd = ['podman', 'exec', '-i', 'samba-dc', 'pdbedit', '-u', user, f'--fullname={display_name}']
     subprocess.run(setname_cmd, stdout=sys.stderr, check=True, text=True)

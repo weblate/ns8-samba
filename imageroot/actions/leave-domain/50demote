@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2022 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+set -e
+exec 1>&2
+
+#
+# Try to demote the DC
+#
+
+request=$(cat /dev/stdin)
+user=$(echo "$request" | jq -r '.adminuser // empty')
+password=$(echo "$request" | jq -r '.adminpass // empty')
+server=$(echo "$request" | jq -r '.designated_survivor // empty')
+echo "$password" | podman exec -i samba-dc samba-tool domain demote --server="$server" -U"$user" &>2

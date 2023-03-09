@@ -30,7 +30,7 @@ request = json.load(sys.stdin)
 group = request['group']
 
 removegroup_cmd = [
-    'podman', 'exec', os.environ['MODULE_ID'], 'samba-tool',
+    'podman', 'exec', 'samba-dc', 'samba-tool',
     'group', 'delete', group,
 ]
 

@@ -30,7 +30,7 @@ agent.set_weight(os.path.basename(__file__), 0) # Validation step, no task progr
 request = json.load(sys.stdin)
 user = request['user']
 
-testexists_cmd = ['podman', 'exec', '-i', os.environ['MODULE_ID'], 'samba-tool', 'user', 'show', user]
+testexists_cmd = ['podman', 'exec', '-i', 'samba-dc', 'samba-tool', 'user', 'show', user]
 proc = subprocess.run(testexists_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
 if proc.returncode == 0:
     agent.set_status('validation-failed')

@@ -1,21 +1,18 @@
 [Unit]
 Description=Samba AD Domain Controller
-After=network-online.target
-Wants=network-online.target
-ConditionPathExists=/var/lib/nethserver/%N/state/environment
+
 
 [Service]
 Type=forking
 Environment=PODMAN_SYSTEMD_UNIT=%n
 EnvironmentFile=/etc/nethserver/agent.env
-EnvironmentFile=/var/lib/nethserver/%N/state/environment
-Restart=on-failure
+EnvironmentFile=%S/state/environment
+Restart=always
 TimeoutStopSec=70
 # samba exits with 127 on SIGTERM:
 SuccessExitStatus=127
 ExecStartPre=/bin/rm -f %t/%N.pid %t/%N.cid
-ExecStartPre=runagent -m %N samba-network up
-ExecStartPre=runagent -m %N bash -c "(echo -n DNS_FORWARDER= ; print-nameservers) > dns_forwarder.env"
+ExecStartPre=runagent bash -c "(echo -n DNS_FORWARDER= ; print-nameservers) > dns_forwarder.env"
 ExecStart=/usr/bin/podman run \
     --dns=none \
     --no-hosts \
@@ -24,18 +21,16 @@ ExecStart=/usr/bin/podman run \
     --cidfile %t/%N.cid \
     --cgroups=no-conmon \
     --network=host \
-    --cap-drop=all \
-    --cap-add=chown,dac_override,dac_read_search,fowner,setgid,setuid,sys_admin,net_bind_service \
+    --privileged \
     --hostname=${HOSTNAME} \
-    --log-opt=tag=${MODULE_ID} \
     --replace --name=%N \
     --env=REALM \
     --env=IPADDRESS \
     --env=PREFIXLEN \
     --env=NBDOMAIN \
     --env-file=dns_forwarder.env \
-    --volume=%N-data:/var/lib/samba:Z \
-    --volume=%N-config:/etc/samba:z \
+    --volume=data:/var/lib/samba:z \
+    --volume=config:/etc/samba:z \
     --init \
     ${SAMBA_DC_IMAGE}
 
@@ -47,10 +42,8 @@ ExecStartPost=/usr/bin/bash -c "while ! exec 3<>/dev/tcp/${IPADDRESS}/3268; do s
 
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/%N.cid -t 10
 ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/%N.cid
-ExecStopPost=runagent -m %N samba-network down
 PIDFile=%t/%N.pid
-WorkingDirectory=/var/lib/nethserver/%N/state
-SyslogIdentifier=%N
+WorkingDirectory=%S/state
 
 [Install]
 WantedBy=default.target

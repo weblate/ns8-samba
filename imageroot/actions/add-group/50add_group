@@ -32,7 +32,7 @@ users = request['users']
 description = request.get('description', '')
 
 addgroup_cmd = [
-    'podman', 'exec', os.environ['MODULE_ID'], 'samba-tool',
+    'podman', 'exec', 'samba-dc', 'samba-tool',
     'group', 'add', group
 ]
 
@@ -43,7 +43,7 @@ subprocess.run(addgroup_cmd, stdout=sys.stderr, check=True, text=True)
 
 if users:
     addmembers_cmd = [
-        'podman', 'exec', os.environ['MODULE_ID'], 'samba-tool',
+        'podman', 'exec', 'samba-dc', 'samba-tool',
         'group', 'addmembers', group, ','.join(users),
     ]
 

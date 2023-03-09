@@ -33,7 +33,7 @@ password = request.get('password', '') # Empty string implies a random password 
 display_name = request.get('display_name', '')
 locked = request.get('locked', False)
 
-sambatool_cmd = ['podman', 'exec', '-i', os.environ['MODULE_ID'], 'samba-tool']
+sambatool_cmd = ['podman', 'exec', '-i', 'samba-dc', 'samba-tool']
 adduser_cmd = sambatool_cmd + ['user', 'create', user]
 
 if not password:
@@ -53,5 +53,5 @@ for group in groups:
     subprocess.run(addmember_cmd, stdout=sys.stderr, check=True, text=True)
 
 if display_name:
-    setname_cmd = ['podman', 'exec', '-i', os.environ['MODULE_ID'], 'pdbedit', '-u', user, f'--fullname={display_name}']
+    setname_cmd = ['podman', 'exec', '-i', 'samba-dc', 'pdbedit', '-u', user, f'--fullname={display_name}']
     subprocess.run(setname_cmd, stdout=sys.stderr, check=True, text=True)
