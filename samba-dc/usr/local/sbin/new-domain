@@ -25,7 +25,10 @@ samba-tool domain provision \
     "--option=include = /etc/samba/include.conf"
 
 if [[ -z "${usebuiltinadmin}" ]]; then
+    # adminuser is not the builtin administrator, set their password and
+    # add to "domain admins" group:
     samba-tool user create "${adminuser}" <<<"${adminpass}"$'\n'"${adminpass}"
+    samba-tool group addmembers 'domain admins' "${adminuser}"
     samba-tool user disable administrator
 fi
 samba-tool user setexpiry --noexpiry "${adminuser}"
