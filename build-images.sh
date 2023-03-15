@@ -13,8 +13,13 @@ if ! buildah inspect --type container "${container}" &>/dev/null; then
     container=$(buildah from --name "${container}" docker.io/library/ubuntu:${ubuntu_tag})
     buildah run "${container}" -- bash <<EOF
 set -e
+groupadd administrators # mapped to Samba domain Administrators group
 apt-get update
 apt-get -y install samba winbind krb5-user iputils-ping bzip2 ldb-tools chrony dnsutils
+apt-get -y install acl xattr smbclient libnss-winbind
+mkdir -p /var/lib/samba/shares
+chown -c root:administrators /var/lib/samba/shares
+chmod -c 0770 /var/lib/samba/shares
 apt-get clean
 find /var/lib/apt/lists/ -type f -delete
 EOF

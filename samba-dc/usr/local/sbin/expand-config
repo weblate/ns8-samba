@@ -55,6 +55,11 @@ cat - >/etc/samba/smb.conf <<EOF
         acl_xattr:security_acl_name = user.NTACL
         acl_xattr:ignore system acls = yes
 
+        template homedir = /var/lib/samba/shares/%U
+
+        registry shares = yes
+        inherit owner = yes
+
         include = /etc/samba/include.conf
 
 [sysvol]
@@ -66,5 +71,16 @@ cat - >/etc/samba/smb.conf <<EOF
 [netlogon]
         path = /var/lib/samba/sysvol/${REALM,,}/scripts
         read only = No
+
+[homes]
+comment = %u home directory
+browseable = no
+writeable = yes
+
+[share$]
+path = /var/lib/samba/shares
+comment = Shared and home directories
+browseable = no
+writeable = yes
 
 EOF
