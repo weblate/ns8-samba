@@ -28,6 +28,7 @@ ExecStart=/usr/bin/podman run \
     --env=IPADDRESS \
     --env=PREFIXLEN \
     --env=NBDOMAIN \
+    --env=SAMBA_LOGLEVEL \
     --env-file=dns_forwarder.env \
     --volume=data:/var/lib/samba:z \
     --volume=config:/etc/samba:z \
