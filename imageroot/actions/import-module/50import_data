@@ -15,6 +15,6 @@ exec podman run --rm \
     --name="${MODULE_ID}-import_data_$$" \
     --network=none \
     --entrypoint=[] \
-    --volume="${MODULE_ID}-data":/var/lib/samba:Z \
+    --volume="data":/var/lib/samba:Z \
     "${RSYNC_IMAGE:?}" \
     find /var/lib/samba -name '*.export' -exec sh -c 'mv -vf ${1} ${1%.export}' -- {} \;
