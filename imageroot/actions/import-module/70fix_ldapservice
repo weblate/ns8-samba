@@ -12,7 +12,7 @@ set -e
 # userWorkstations attribute value that needs to be cleared
 # See https://github.com/NethServer/nethserver-dc/pull/113
 
-podman exec -i "${MODULE_ID}" bash -c '
+podman exec -i samba-dc bash -c '
 function get_dn()
 {
   /usr/bin/ldbsearch -H /var/lib/samba/private/sam.ldb "sAMAccountName=$1" dn | \

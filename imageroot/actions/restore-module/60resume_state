@@ -27,8 +27,8 @@ echo "Resume Samba DC state:"
 podman run --hostname="${HOSTNAME}" --privileged --interactive --workdir=/var/lib/samba \
     --replace --name="${MODULE_ID}" --rm \
     --entrypoint=[] \
-    --volume="${MODULE_ID}-config":/etc/samba \
-    --volume="${MODULE_ID}-data":/var/lib/samba \
+    --volume="config":/etc/samba \
+    --volume="data":/var/lib/samba \
     "${SAMBA_DC_IMAGE}" bash -s <<'EOF'
 
 set -e
