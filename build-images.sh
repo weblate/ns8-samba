@@ -11,15 +11,10 @@ container="ubuntu-working-container"
 # Prepare a local Ubuntu-based samba image
 if ! buildah inspect --type container "${container}" &>/dev/null; then
     container=$(buildah from --name "${container}" docker.io/library/ubuntu:${ubuntu_tag})
-    buildah run "${container}" -- bash <<EOF
+    buildah run "${container}" -- bash <<'EOF'
 set -e
-groupadd administrators # mapped to Samba domain Administrators group
 apt-get update
-apt-get -y install samba winbind krb5-user iputils-ping bzip2 ldb-tools chrony dnsutils
-apt-get -y install acl xattr smbclient libnss-winbind
-mkdir -p /var/lib/samba/shares
-chown -c root:administrators /var/lib/samba/shares
-chmod -c 0770 /var/lib/samba/shares
+apt-get -y install samba winbind krb5-user iputils-ping bzip2 ldb-tools chrony dnsutils acl smbclient libnss-winbind
 apt-get clean
 find /var/lib/apt/lists/ -type f -delete
 EOF
@@ -33,11 +28,20 @@ container=$(buildah from "${repobase}/${reponame}")
 reponame="samba-dc"
 buildah run "${container}" -- mv -v /etc/samba/smb.conf /etc/samba/smb.conf.${ubuntu_tag}
 buildah add "${container}" samba-dc/ /
+export SAMBA_SHARES_DIR=/srv/shares
+buildah run "${container}" -- bash <<EOF
+groupadd --gid=1001 administrators # alias of Administrators group
+mkdir -p "${SAMBA_SHARES_DIR}"
+chown -c root:administrators "${SAMBA_SHARES_DIR}"
+chmod -c 0770 "${SAMBA_SHARES_DIR}"
+EOF
 buildah config --cmd='' \
     --entrypoint='["/entrypoint.sh"]' \
     --env=SAMBA_LOGLEVEL="1 auth_audit:3" \
+    --env=SAMBA_SHARES_DIR="${SAMBA_SHARES_DIR}" \
     --volume=/var/lib/samba \
     --volume=/etc/samba \
+    --volume="${SAMBA_SHARES_DIR}" \
     "${container}"
 buildah commit "${container}" "${repobase}/${reponame}"
 images+=("${repobase}/${reponame}")

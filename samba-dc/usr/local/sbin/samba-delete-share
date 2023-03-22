@@ -9,7 +9,7 @@ set -e
 
 sharename="${1:?missing sharename argument}"
 
-share_path="/var/lib/samba/shares/${sharename}"
+share_path="${SAMBA_SHARES_DIR}/${sharename}"
 
 net conf delshare "${@}" || : # Ignore failure for home dirs
 

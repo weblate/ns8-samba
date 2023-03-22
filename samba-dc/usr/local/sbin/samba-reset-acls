@@ -47,7 +47,7 @@ sharename="${1}"
 [ -z "${sharename}" ] && usage_error "${@}"
 
 share_root="${sharename}"
-cd /var/lib/samba/shares
+cd "${SAMBA_SHARES_DIR}"
 
 # drop the sharename argument
 shift

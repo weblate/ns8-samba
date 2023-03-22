@@ -44,7 +44,7 @@ shift $((OPTIND - 1))
 sharename="${1}"
 [ -z "${sharename}" ] && usage_error "${@}"
 
-share_root="/var/lib/samba/shares/${sharename}"
+share_root="${SAMBA_SHARES_DIR}/${sharename}"
 
 # drop the sharename argument
 shift
