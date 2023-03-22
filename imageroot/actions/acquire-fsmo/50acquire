@@ -11,4 +11,9 @@ set -e
 # Acquire all FSMO roles
 #
 
-podman exec -i samba-dc samba-tool fsmo transfer --role=all 1>&2
+exec 1>&2
+
+request=$(cat /dev/stdin)
+user=$(echo "$request" | jq -r '.adminuser // empty')
+password=$(echo "$request" | jq -r '.adminpass // empty')
+echo "$password" | podman exec -i samba-dc samba-tool fsmo transfer --role=all -U"$user"

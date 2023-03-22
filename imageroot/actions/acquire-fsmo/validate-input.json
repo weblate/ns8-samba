@@ -1,0 +1,27 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "acquire-fsmo input",
+    "$id": "http://schema.nethserver.org/samba/acquire-fsmo-input.json",
+    "description": "Acquire FSMO roles",
+    "examples": [
+        {
+            "adminuser": "administrator",
+            "adminpass": "Nethesis,1234"
+        }
+    ],
+    "type": "object",
+    "required": [
+        "adminuser",
+        "adminpass"
+    ],
+    "properties": {
+        "adminuser": {
+            "type": "string",
+            "minLength": 1
+        },
+        "adminpass": {
+            "type": "string",
+            "minLength": 1
+        }
+    }
+}
