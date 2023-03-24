@@ -63,6 +63,22 @@ if [[ -z "${sid_group}" ]]; then
     exit 2
 fi
 
+# Disable/Enable the share during ACLs reset
+trap 'net conf delparm "${sharename}" available' EXIT
+net conf setparm "${sharename}" available no
+
+# Reset settings if coming from NS7 migration
+if [[ "$(net conf getparm "${sharename}" 'acl_xattr:ignore system acls' 2>/dev/null)" == no ]]; then
+    # This share was imported from NS7 and still relies on Posix ACLs:
+    echo "Upgrading \"${sharename}\" permissions for Windows ACL compatibility"
+    # Disable the override setting used by migration:
+    net conf delparm "${sharename}" 'acl_xattr:ignore system acls'
+    # Reset ACLs, ownership and permissions:
+    setfacl -R -b "${share_root}"
+    chmod -R 0775 "${share_root}"
+    chown -R "root:users" "${share_root}"
+fi
+
 # Permissions bits. Their meaning is fully documented here:
 # https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/f4296d69-1c0f-491f-9587-a960b292d070
 perms_read="0x001200a9" # FX + ...

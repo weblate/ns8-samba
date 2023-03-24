@@ -11,6 +11,6 @@ sharename="${1:?missing sharename argument}"
 
 share_path="${SAMBA_SHARES_DIR}/${sharename}"
 
-net conf delshare "${@}" || : # Ignore failure for home dirs
+net -d 1 conf delshare "${@}" || : # Ignore failure for home dirs
 
 rm -rf "${share_path}"

@@ -55,7 +55,7 @@ cat - >/etc/samba/smb.conf <<EOF
         acl_xattr:security_acl_name = user.NTACL
         acl_xattr:ignore system acls = yes
 
-        template homedir = %$(SAMBA_SHARES_DIR)/%U
+        template homedir = ${SAMBA_SHARES_DIR:?}/%U
 
         registry shares = yes
         inherit owner = yes
@@ -78,7 +78,7 @@ browseable = no
 writeable = yes
 
 [share$]
-path = %$(SAMBA_SHARES_DIR)
+path = ${SAMBA_SHARES_DIR:?}
 comment = Shared and home directories
 browseable = no
 writeable = yes

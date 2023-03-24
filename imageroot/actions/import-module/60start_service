@@ -11,12 +11,6 @@ set -e
 # Enable and start the NSDC service
 systemctl --user enable --now samba-dc.service
 
-echo "Wait for DNS port to become available..."
-while ! exec 3<>/dev/tcp/${IPADDRESS}/53 || ((++attempt<15)) ; do
-    sleep 1
-done
-echo "...done"
-
 # Ignore TSIG verify errors (exit code 2): false alarms. It is an old
 # story: https://lists.samba.org/archive/samba/2015-March/190408.html
 podman exec -i samba-dc /usr/sbin/samba_dnsupdate --verbose || :

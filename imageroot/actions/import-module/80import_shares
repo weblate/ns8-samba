@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import agent
+import sys
+import os
+import subprocess
+import json
+
+#
+# Reset sysvol ACLs
+# NOTE: the message "idmap range not specified for domain '*'" should not harm
+#
+agent.run_helper('podman', 'exec', 'samba-dc', 'samba-tool', 'ntacl', 'sysvolreset').check_returncode()
+
+try:
+    jaccounts = json.load(open("accounts.json"))
+except FileNotFoundError:
+    print("Shared directories are not migrated", file=sys.stderr)
+    sys.exit(0)
+
+
+#
+# Import other shares with a special Rsync service instance to preserve
+# Posix ACLs
+#
+request = json.load(sys.stdin)
+port = int(request['port'])
+username, password = request['credentials']
+
+with agent.redis_connect() as rdb:
+    cluster_network = rdb.get('cluster/network')
+    rsyncd_address = rdb.hget(f'node/{os.environ["NODE_ID"]}/vpn', 'ip_address')
+
+# Prepare shares metadata for rsyncd-import-shares input descriptor:
+cmd_input=""
+for record in jaccounts:
+    if record['type'] != 'ibay':
+        continue
+    cmd_input += record['name'] + "\t" + record['props']['Description'] + "\n"
+
+subprocess.run(['podman', 'exec',
+        '--interactive',
+        '--env=RSYNCD_NETWORK=' + cluster_network,
+        '--env=RSYNCD_ADDRESS=' + rsyncd_address,
+        '--env=RSYNCD_PORT=' + str(port),
+        '--env=RSYNCD_USER=' + username,
+        '--env=RSYNCD_PASSWORD=' + password,
+        '--env=RSYNCD_SYSLOG_TAG=' + os.environ['MODULE_ID'],
+        'samba-dc',
+        'rsyncd-import-shares',
+    ],
+    input=cmd_input,
+    stdout=sys.stderr,
+    check=True,
+    text=True,
+)

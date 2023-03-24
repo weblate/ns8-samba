@@ -82,3 +82,22 @@ To create a new user, just execute:
 ```
 podman exec -ti samba1 samba-tool user create goofy Nethesis,1234 --given-name=Goofy --surname=Goof --mail=goofy@mail.org
 ```
+
+## Migration notes
+
+Migration is implemented in the `import-module` action.
+
+- The NS7 DC role is transferred to NS8 by copying `/var/lib/samba` dir
+  contents. The NS7 file-server role can be transferred to NS8 too.
+- The migration procedure synchronizes the existing Posix ACLs of shared
+  folders. A special backward-compatible configuration is applied to
+  shares created by the migration procedure. The `samba-reset-acls`
+  command clears that special configuration, too.
+- Home directories are migrated like shared folders. If a shareed folder
+  has the same name of a user, the home directory is not migrated.
+- Guest access does not work in NS8, because it is [not implemented by the
+  Samba DC
+  role](https://wiki.samba.org/index.php/FAQ#How_Do_I_Enable_Guest_Access_to_a_Share_on_a_Samba_AD_DC.3F)
+- `user.SAMBA_PAI` attribute is not copied to NS8 shares. It contains
+  the ACL *protected/don't inherit* flag. See [map acl
+  inherit](https://www.samba.org/samba/docs/current/man-html/smb.conf.5.html).
