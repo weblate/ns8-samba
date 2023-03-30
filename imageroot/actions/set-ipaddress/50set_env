@@ -20,5 +20,3 @@ if ipaddress.ip_address(request['ipaddress']) in cluster_network:
     agent.set_env('PREFIXLEN', str(cluster_network.prefixlen))
 else:
     agent.unset_env('PREFIXLEN')
-
-agent.dump_env()

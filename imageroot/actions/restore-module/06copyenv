@@ -58,5 +58,3 @@ def generate_new_dc_name(name):
 
 hname, _ = original_environment['HOSTNAME'].split('.', 1) # short hostname
 agent.set_env('HOSTNAME', generate_new_dc_name(hname) + '.' + original_environment['REALM'].lower())
-
-agent.dump_env()
