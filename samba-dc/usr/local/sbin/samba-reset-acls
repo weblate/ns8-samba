@@ -53,7 +53,7 @@ cd "${SAMBA_SHARES_DIR}"
 shift
 
 if [[ ! -d "${share_root}" ]]; then
-    echo "Share ${sharename} not found!" 1>&2 
+    echo "Directory for ${sharename} not found!" 1>&2
     exit 2
 fi
 
@@ -63,9 +63,11 @@ if [[ -z "${sid_group}" ]]; then
     exit 2
 fi
 
-# Disable/Enable the share during ACLs reset
-trap 'net conf delparm "${sharename}" available' EXIT
-net conf setparm "${sharename}" available no
+if [[ -z "${is_home_dir}" ]]; then
+    # Disable/Enable the share during ACLs reset
+    trap 'net conf delparm "${sharename}" available || :' EXIT
+    net conf setparm "${sharename}" available no
+fi
 
 # Reset settings if coming from NS7 migration
 if [[ "$(net conf getparm "${sharename}" 'acl_xattr:ignore system acls' 2>/dev/null)" == no ]]; then
@@ -130,7 +132,7 @@ if [[ -z "${is_home_dir}" ]]; then
     #
     # User owner: LA=Local Administrator (can override permissions)
     # Group owner: DU=Domain users (just for quota calculation)
-    # 
+    #
     # - FULL access to System
     # - FULL access to BA=Builtin administrators (Domain admins are included)
     # - Additional ACE for group
@@ -139,8 +141,21 @@ if [[ -z "${is_home_dir}" ]]; then
     sddl_acl_sdir="O:LAG:DUD:AI(A;OICIID;${perms_full};;;SY)(A;OICIID;${perms_full};;;BA)${ace_group_sdir}${ace_everyone_sdir}"
     sddl_acl_root="O:LAG:DUD:PAI(A;OICI;${perms_full};;;SY)(A;OICI;${perms_full};;;BA)${ace_group_root}${ace_everyone_root}"
 else
-    echo "Home dir perms not implemented" 2>&1
-    exit 3
+    #
+    # ACL for home directory
+    #
+    read -r sid_user sid_type rest < <(wbinfo -n "${sharename}")
+    if [[ -z "${sid_user}" ]]; then
+        echo "SID not found for user ${sharename}" 1>&2
+        exit 3
+    fi
+    if [[ "${sid_type}" != SID_USER ]]; then
+        echo "${sharename} is not a user" 1>&2
+        exit 4
+    fi
+    sddl_acl_file="O:${sid_user}G:DUD:AI(A;ID;${perms_full};;;SY)(A;ID;${perms_full};;;${sid_user})"
+    sddl_acl_sdir="O:${sid_user}G:DUD:AI(A;OICIID;${perms_full};;;SY)(A;OICIID;${perms_full};;;${sid_user})"
+    sddl_acl_root="O:${sid_user}G:DUD:PAI(A;OICI;${perms_full};;;SY)(A;OICI;${perms_full};;;${sid_user})"
 fi
 
 find "${share_root}" -print0 | xargs -0 -r -- setfattr -x user.NTACL --  &>/dev/null || :
