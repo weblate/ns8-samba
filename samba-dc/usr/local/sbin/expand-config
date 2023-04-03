@@ -77,10 +77,4 @@ comment = %u home directory
 browseable = no
 writeable = yes
 
-[share$]
-path = ${SAMBA_SHARES_DIR:?}
-comment = Shared and home directories
-browseable = no
-writeable = yes
-
 EOF
