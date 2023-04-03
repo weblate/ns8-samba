@@ -38,7 +38,6 @@ trap "rm -f ${tmpenv}" EXIT
     --dns=none \
     --no-hosts \
     --network=host \
-    --privileged \
     --interactive \
     --env=REALM \
     --env=IPADDRESS \

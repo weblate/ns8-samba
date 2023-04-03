@@ -21,7 +21,6 @@ ExecStart=/usr/bin/podman run \
     --cidfile %t/%N.cid \
     --cgroups=no-conmon \
     --network=host \
-    --privileged \
     --hostname=${HOSTNAME} \
     --replace --name=%N \
     --env=REALM \

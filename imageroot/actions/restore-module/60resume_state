@@ -24,7 +24,7 @@ exec 1>&2
 set -e
 
 echo "Resume Samba DC state:"
-podman run --hostname="${HOSTNAME}" --privileged --interactive --workdir=/var/lib/samba \
+podman run --hostname="${HOSTNAME}" --interactive --workdir=/var/lib/samba \
     --replace --name="${MODULE_ID}" --rm \
     --entrypoint=[] \
     --volume="config":/etc/samba \
