@@ -30,5 +30,3 @@ with agent.redis_connect() as rdb:
 if ipaddress.ip_address(ienv['IPADDRESS']) in cluster_network:
     # Required by Samba to bind interfaces without broadcast address:
     agent.set_env('PREFIXLEN', str(cluster_network.prefixlen))
-
-agent.dump_env()

@@ -51,14 +51,30 @@ cat - >/etc/samba/smb.conf <<EOF
         server role = active directory domain controller
         workgroup = ${NBDOMAIN}
         log level = ${SAMBA_LOGLEVEL}
+
         acl_xattr:security_acl_name = user.NTACL
+        acl_xattr:ignore system acls = yes
+
+        template homedir = ${SAMBA_SHARES_DIR:?}/%U
+
+        registry shares = yes
+        inherit owner = yes
+
         include = /etc/samba/include.conf
 
 [sysvol]
         path = /var/lib/samba/sysvol
         read only = No
+        acl_xattr:ignore system acls = no
+        inherit owner = no
 
 [netlogon]
         path = /var/lib/samba/sysvol/${REALM,,}/scripts
         read only = No
+
+[homes]
+comment = %u home directory
+browseable = no
+writeable = yes
+
 EOF

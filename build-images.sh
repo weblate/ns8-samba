@@ -11,10 +11,10 @@ container="ubuntu-working-container"
 # Prepare a local Ubuntu-based samba image
 if ! buildah inspect --type container "${container}" &>/dev/null; then
     container=$(buildah from --name "${container}" docker.io/library/ubuntu:${ubuntu_tag})
-    buildah run "${container}" -- bash <<EOF
+    buildah run "${container}" -- bash <<'EOF'
 set -e
 apt-get update
-apt-get -y install samba winbind krb5-user iputils-ping bzip2 ldb-tools chrony dnsutils
+apt-get -y install samba winbind krb5-user iputils-ping bzip2 ldb-tools chrony dnsutils acl smbclient libnss-winbind rsync
 apt-get clean
 find /var/lib/apt/lists/ -type f -delete
 EOF
@@ -31,9 +31,21 @@ buildah add "${container}" samba-dc/ /
 buildah config --cmd='' \
     --entrypoint='["/entrypoint.sh"]' \
     --env=SAMBA_LOGLEVEL="1 auth_audit:3" \
+    --env=SAMBA_SHARES_DIR=/srv/shares \
+    --volume=/srv/shares \
     --volume=/var/lib/samba \
     --volume=/etc/samba \
     "${container}"
+buildah run "${container}" -- bash <<'EOF'
+groupadd --gid=1001 administrators # alias of Administrators group
+mkdir -p "${SAMBA_SHARES_DIR:?}"
+chown -c root:administrators "${SAMBA_SHARES_DIR}"
+chmod -c 0770 "${SAMBA_SHARES_DIR}"
+# Verify our assumptions on the uid/gid numeric value of some well-known entries
+[[ "$(id -u nobody)" == 65534 ]] || : ${nobody_uid_error:?Unexpected nobody uid value}
+[[ "$(id -g nobody)" == 65534 ]] || : ${nobody_gid_error:?Unexpected nobody gid value}
+[[ "$(getent group users | cut -d: -f3)" == 100 ]] || : ${users_gid_error:?Unexpected users gid value}
+EOF
 buildah commit "${container}" "${repobase}/${reponame}"
 images+=("${repobase}/${reponame}")
 

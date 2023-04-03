@@ -1,0 +1,187 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+set -e
+
+dump_xattr ()
+{
+    getfattr -n user.NTACL -e base64 "${1#/}" | awk -F= '$1 == "user.NTACL" {print substr($0, 12)}'
+}
+
+usage_error ()
+{
+    exec 1>&2
+    [ -n "$1" ] && printf "Error: %s\n" "$1"
+    printf 'Usage: %s [OPTIONS] SHARE\n' "$0"
+    printf '    SHARE                   Shared folder to reset\n'
+    printf '    OPTIONS (not applied to home directories)\n'
+    printf '      -H                    Reset a home directory: the SHARE argument is the user name\n'
+    printf '      -p PERMS              Permissions, one of: erw, ergrw, grw (default)\n'
+    printf '      -g group              Target group name, default "%s"\n' "${group_name}"
+    printf '      -h                    Print this help\n'
+    exit 2
+}
+
+# Default option values:
+group_name="domain users"
+perms=grw
+is_home_dir=
+
+# Parse command-line arguments
+while getopts "GHhg:p:" optname ; do
+    case ${optname} in
+        p)  perms="${OPTARG}" ;;
+        g)  group_name="${OPTARG}" ;;
+        H)  is_home_dir=1 ;;
+        h)  usage_error "${@}" ;;
+        *)  usage_error "${@}" ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+sharename="${1}"
+[ -z "${sharename}" ] && usage_error "${@}"
+
+share_root="${sharename}"
+cd "${SAMBA_SHARES_DIR}"
+
+# drop the sharename argument
+shift
+
+if [[ ! -d "${share_root}" ]]; then
+    echo "Directory for ${sharename} not found!" 1>&2
+    exit 2
+fi
+
+sid_group="$(wbinfo -n "${group_name}" | awk '{print $1}')"
+if [[ -z "${sid_group}" ]]; then
+    echo "SID not found for ${group_name}" 1>&2
+    exit 2
+fi
+
+if [[ -z "${is_home_dir}" ]]; then
+    # Disable/Enable the share during ACLs reset
+    trap 'net conf delparm "${sharename}" available || :' EXIT
+    net conf setparm "${sharename}" available no
+fi
+
+# Reset settings if coming from NS7 migration
+if [[ "$(net conf getparm "${sharename}" 'acl_xattr:ignore system acls' 2>/dev/null)" == no ]]; then
+    # This share was imported from NS7 and still relies on Posix ACLs:
+    echo "Upgrading \"${sharename}\" permissions for Windows ACL compatibility"
+    # Disable the override setting used by migration:
+    net conf delparm "${sharename}" 'acl_xattr:ignore system acls'
+    # Reset ACLs, ownership and permissions:
+    setfacl -R -b "${share_root}"
+    chmod -R 0775 "${share_root}"
+    chown -R "root:users" "${share_root}"
+fi
+
+# Permissions bits. Their meaning is fully documented here:
+# https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/f4296d69-1c0f-491f-9587-a960b292d070
+perms_read="0x001200a9" # FX + ...
+perms_change="0x001301bf" # perms_read + ...
+perms_full="0x001f01ff" # corresponds to FA
+
+# Translate perms name to rights bitmasks
+if [[ "${perms}" == erw ]]; then
+    group_rights=""
+    everyone_rights="${perms_change}"
+elif [[ "${perms}" == ergrw ]]; then
+    group_rights="${perms_change}"
+    everyone_rights="${perms_read}"
+elif [[ "${perms}" == grw ]]; then
+    group_rights="${perms_change}"
+    everyone_rights=""
+else
+    echo "Unknown perms value: ${perms}" 1>&2
+    exit 2
+fi
+
+# Translate group rights to ACEs
+if [[ -n "${group_rights}" ]]; then
+    ace_group_file="(A;ID;${group_rights};;;${sid_group})"
+    ace_group_sdir="(A;OICIID;${group_rights};;;${sid_group})"
+    ace_group_root="(A;OICI;${group_rights};;;${sid_group})"
+else
+    # No rights at all, empty ACE
+    ace_group_file=""
+    ace_group_sdir=""
+    ace_group_root=""
+fi
+
+# Translate everyone rights to ACEs
+if [[ -n "${everyone_rights}" ]]; then
+    ace_everyone_file="(A;ID;${everyone_rights};;;WD)"
+    ace_everyone_sdir="(A;OICIID;${everyone_rights};;;WD)"
+    ace_everyone_root="(A;OICI;${everyone_rights};;;WD)"
+else
+    # No rights at all, empty ACE
+    ace_everyone_file=""
+    ace_everyone_sdir=""
+    ace_everyone_root=""
+fi
+
+if [[ -z "${is_home_dir}" ]]; then
+    #
+    # ACL for shared folders, set with inheritance flags
+    #
+    # User owner: LA=Local Administrator (can override permissions)
+    # Group owner: DU=Domain users (just for quota calculation)
+    #
+    # - FULL access to System
+    # - FULL access to BA=Builtin administrators (Domain admins are included)
+    # - Additional ACE for group
+    #
+    sddl_acl_file="O:LAG:DUD:AI(A;ID;${perms_full};;;SY)(A;ID;${perms_full};;;BA)${ace_group_file}${ace_everyone_file}"
+    sddl_acl_sdir="O:LAG:DUD:AI(A;OICIID;${perms_full};;;SY)(A;OICIID;${perms_full};;;BA)${ace_group_sdir}${ace_everyone_sdir}"
+    sddl_acl_root="O:LAG:DUD:PAI(A;OICI;${perms_full};;;SY)(A;OICI;${perms_full};;;BA)${ace_group_root}${ace_everyone_root}"
+else
+    #
+    # ACL for home directory
+    #
+    read -r sid_user sid_type rest < <(wbinfo -n "${sharename}")
+    if [[ -z "${sid_user}" ]]; then
+        echo "SID not found for user ${sharename}" 1>&2
+        exit 3
+    fi
+    if [[ "${sid_type}" != SID_USER ]]; then
+        echo "${sharename} is not a user" 1>&2
+        exit 4
+    fi
+    sddl_acl_file="O:${sid_user}G:DUD:AI(A;ID;${perms_full};;;SY)(A;ID;${perms_full};;;${sid_user})"
+    sddl_acl_sdir="O:${sid_user}G:DUD:AI(A;OICIID;${perms_full};;;SY)(A;OICIID;${perms_full};;;${sid_user})"
+    sddl_acl_root="O:${sid_user}G:DUD:PAI(A;OICI;${perms_full};;;SY)(A;OICI;${perms_full};;;${sid_user})"
+fi
+
+find "${share_root}" -print0 | xargs -0 -r -- setfattr -x user.NTACL --  &>/dev/null || :
+
+# Apply the ACL to share root:
+samba-tool ntacl set "${sddl_acl_root}" "${share_root}"
+
+# Find just the first file element, used to store xattr for sddl_acl_file
+share_file="$(find "${share_root}" -type f -print -quit)"
+if [[ -n "${share_file}" ]]; then
+    samba-tool ntacl set "${sddl_acl_file}" "${share_file}"
+    xattr_file=$(dump_xattr "${share_file}")
+    # Apply the xattr value to files recursively
+    find "${share_root}" -mindepth 1 -type d -print0 | xargs -0 -r -- setfattr -n user.NTACL -v "${xattr_file}" --
+fi
+
+# Find just the first subdir element, used to store xattr for
+# sddl_acl_sdir
+#
+# (?) It seems OICI inheritance flags are not set if file xattr is not
+#     already in place, so the following block comes after the
+#     "sddl_acl_file" one
+share_sdir="$(find "${share_root}" -mindepth 1 -type d -print -quit)"
+if [[ -n "${share_sdir}" ]]; then
+    samba-tool ntacl set "${sddl_acl_sdir}" "${share_sdir}"
+    xattr_sdir=$(dump_xattr "${share_sdir}")
+    # Apply the xattr value to sub directories recursively
+    find "${share_root}" -mindepth 1 -type d -print0 | xargs -0 -r -- setfattr -n user.NTACL -v "${xattr_sdir}" --
+fi

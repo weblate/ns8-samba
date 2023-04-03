@@ -38,7 +38,6 @@ trap "rm -f ${tmpenv}" EXIT
     --dns=none \
     --no-hosts \
     --network=host \
-    --privileged \
     --interactive \
     --env=REALM \
     --env=IPADDRESS \
@@ -52,4 +51,5 @@ trap "rm -f ${tmpenv}" EXIT
     --rm --name=${MODULE_ID}-provision \
     --volume=data:/var/lib/samba:z \
     --volume=config:/etc/samba:z \
+    --volume=shares:/srv/shares:z \
     "${SAMBA_DC_IMAGE:?}" "${PROVISION_TYPE:?}"

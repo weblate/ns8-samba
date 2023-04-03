@@ -1,0 +1,63 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+set -e
+
+echo "${RSYNCD_USER:?}:${RSYNCD_PASSWORD:?}" >/etc/rsyncd.secrets
+chmod 600 /etc/rsyncd.secrets
+
+cat >/etc/rsyncd.conf <<EOF
+#
+# rsyncd configuration for module state transferring
+#
+pid file = /run/rsync.pid
+address = ${RSYNCD_ADDRESS:?}
+port = ${RSYNCD_PORT:?}
+syslog tag = ${RSYNCD_SYSLOG_TAG:-rsyncd}
+reverse lookup = no
+forward lookup = no
+uid = 0
+gid = 0
+auth users = ${RSYNCD_USER:?}
+secrets file = /etc/rsyncd.secrets
+# If chroot is enabled, -a/--perms flag does not work
+use chroot = no
+
+[shares]
+path = /srv/shares
+# Accept only the DOSATTRIB extended attribute
+filter = -x! user.DOSATTRIB
+read only = no
+munge symlinks = no
+hosts allow = 127.0.0.1 ::1 ${RSYNCD_NETWORK:-0.0.0.0/0}
+
+[terminate]
+# An empty directory:
+path = /var/lib/misc
+read only = yes
+list = no
+post-xfer exec = bash -c 'kill -TERM \$(< /run/rsync.pid)'
+EOF
+
+# Avoid rsync/winbind race: wait until winbind is up
+while ! wbinfo -p &>/dev/null; do
+    sleep 1;
+    if (( ++attempt > 10 )); then
+        echo "Winbindd is not available. Rsync server startup failed!" 1>&2
+        exit 2
+    fi
+done
+
+rsync --daemon --no-detach --log-file=/dev/stderr # ready to receive data!
+
+echo "Now reading shares metadata from stdin..."
+# Expecting data in TSV format: sharename <TAB> description <LF>
+while IFS=$'\t' read -r sharename description; do
+    net conf addshare "${sharename}" "${SAMBA_SHARES_DIR:?}/${sharename}" writeable=y guest_ok=n "${description}"
+    net conf setparm "${sharename}" 'acl_xattr:ignore system acls' no
+    echo "Enabled share ${sharename}"
+done

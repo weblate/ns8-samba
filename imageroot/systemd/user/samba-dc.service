@@ -21,16 +21,17 @@ ExecStart=/usr/bin/podman run \
     --cidfile %t/%N.cid \
     --cgroups=no-conmon \
     --network=host \
-    --privileged \
     --hostname=${HOSTNAME} \
     --replace --name=%N \
     --env=REALM \
     --env=IPADDRESS \
     --env=PREFIXLEN \
     --env=NBDOMAIN \
+    --env=SAMBA_LOGLEVEL \
     --env-file=dns_forwarder.env \
     --volume=data:/var/lib/samba:z \
     --volume=config:/etc/samba:z \
+    --volume=shares:/srv/shares:z \
     --init \
     ${SAMBA_DC_IMAGE}
 

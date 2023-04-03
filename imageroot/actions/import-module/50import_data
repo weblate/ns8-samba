@@ -8,13 +8,81 @@
 exec 1>&2
 set -e
 
-# Import core image URLs
-source /etc/nethserver/core.env
+export NBALIAS=
+if [[ -f nbalias.txt ]]; then
+    NBALIAS="$(< nbalias.txt)"
+fi
 
 exec podman run --rm \
+    --interactive \
     --name="${MODULE_ID}-import_data_$$" \
+    --log-driver=none \
     --network=none \
     --entrypoint=[] \
-    --volume="data":/var/lib/samba:Z \
-    "${RSYNC_IMAGE:?}" \
-    find /var/lib/samba -name '*.export' -exec sh -c 'mv -vf ${1} ${1%.export}' -- {} \;
+    --hostname="${HOSTNAME}" \
+    --env=REALM \
+    --env=IPADDRESS \
+    --env=PREFIXLEN \
+    --env=NBDOMAIN \
+    --env=SAMBA_LOGLEVEL \
+    --env=NBALIAS \
+    --volume=data:/var/lib/samba:z \
+    --volume=config:/etc/samba:z \
+    --volume=shares:/srv/shares:z \
+    "${SAMBA_DC_IMAGE:?}" bash -s <<'EOF'
+# Errors are fatal
+set -e
+
+# If file server migration is enabled, define a NetBIOS alias name for it
+if [[ -n "${NBALIAS}" ]]; then
+    printf "[global]\n    netbios aliases = %s\n\n" "${NBALIAS}" >> /etc/samba/include.conf
+fi
+
+# Rename exported DBs
+find /var/lib/samba -name '*.export' -exec sh -c 'mv -vf ${1} ${1%.export}' -- {} \;
+
+#
+# Well-known entries:
+# uid=0 => Administrator,
+# gid=100 => Users,
+# uid=65534 (nobody) => Anonymous
+#
+cat >/tmp/fix-idmap.ldif <<'EOR'
+dn: CN=S-1-5-7
+changetype: modify
+replace: type
+type: ID_TYPE_BOTH
+-
+replace: xidNumber
+xidNumber: 65534
+
+EOR
+
+# Remap high (>100) uid/gid numbers to range 1001-65530
+ldbsearch -S -H /var/lib/samba/private/idmap.ldb '(xidNumber>=101)' dn xidNumber | awk -v curxid=1001 -- '
+/^dn:/ { dn = $2 } # store dn value
+/^xidNumber:/ {
+    print "dn: " dn
+    print "changetype: modify"
+    print "replace: xidNumber"
+    print "xidNumber: " curxid
+    print ""
+    curxid++
+}
+END {
+    print "dn: CN=CONFIG"
+    print "changetype: modify"
+    print "replace: lowerBound"
+    print "lowerBound: 1001"
+    print "-"
+    print "replace: upperBound"
+    print "upperBound: 65530"
+    print "-"
+    print "replace: xidNumber"
+    print "xidNumber: " curxid
+}
+' >> /tmp/fix-idmap.ldif
+
+# Apply the changes:
+ldbmodify -H /var/lib/samba/private/idmap.ldb </tmp/fix-idmap.ldif
+EOF
