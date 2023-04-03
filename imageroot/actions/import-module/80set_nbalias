@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+exec 1>&2
+set -e
+
+if ! [[ -f nbalias.txt ]]; then
+    exit 0 # skip this step if file server is not migrated
+fi
+
+nbalias="$(< nbalias.txt)"
+podman exec samba-dc samba-tool dns add "127.0.0.1" "${REALM:?}" "${nbalias}" CNAME "${HOSTNAME:?}" -P || : # ignore exit-codes

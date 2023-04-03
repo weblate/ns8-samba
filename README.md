@@ -89,6 +89,8 @@ Migration is implemented in the `import-module` action.
 
 - The NS7 DC role is transferred to NS8 by copying `/var/lib/samba` dir
   contents. The NS7 file-server role can be transferred to NS8 too.
+- If file-server role is migrated, the host name is retained as a NetBIOS
+  alias and a DNS CNAME record, pointing to the DC host name.
 - The migration procedure synchronizes the existing Posix ACLs of shared
   folders. A special backward-compatible configuration is applied to
   shares created by the migration procedure. The `samba-reset-acls`
