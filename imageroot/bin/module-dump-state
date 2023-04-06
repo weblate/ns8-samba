@@ -21,7 +21,7 @@
 #
 
 echo "Dumping Samba DC state to disk:"
-podman exec -w /var/lib/samba -i "${MODULE_ID}" bash -s <<'EOF'
+podman exec -w /var/lib/samba -i samba-dc bash -s <<'EOF'
 set -e
 rm -rvf backup
 samba-tool domain backup offline --targetdir=backup

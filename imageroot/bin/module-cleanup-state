@@ -21,4 +21,4 @@
 #
 
 echo "Cleaning up Samba DC state:"
-podman exec -w /var/lib/samba/ -i "${MODULE_ID}" rm -rvf backup
+podman exec -w /var/lib/samba/ -i samba-dc rm -rvf backup
