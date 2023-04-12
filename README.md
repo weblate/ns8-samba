@@ -63,18 +63,8 @@ In multiple DCs domains, DCs must connect each other to join the domain
 and for data replication. If a DC cannot contact other DCs the provision
 procedure fails.
 
-If the existing network infrastructure does not provide the necessary IP
-routes, it is possible to use the cluster VPN to route IP traffic among
-DCs. For example this command enable the cluster VPN routes to join a second
-DC:
-
-    api-cli run set-routes --agent module/samba2 --data - <<EOF
-    {
-        "realm": "ad.$(hostname -d)",
-        "ipaddress": "10.124.0.2",
-        "use_cluster_vpn": true
-    }
-    EOF
+For this reason the DC IP is reachable from other nodes of the cluster
+through the cluster VPN.
 
 ## Create user
 
