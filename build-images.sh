@@ -5,7 +5,7 @@ images=()
 
 repobase="${REPOBASE:-ghcr.io/nethserver}"
 reponame="ubuntu-samba"
-ubuntu_tag="devel"
+ubuntu_tag=23.04
 
 container="ubuntu-working-container"
 # Prepare a local Ubuntu-based samba image
@@ -45,6 +45,8 @@ chmod -c 0770 "${SAMBA_SHARES_DIR}"
 [[ "$(id -u nobody)" == 65534 ]] || : ${nobody_uid_error:?Unexpected nobody uid value}
 [[ "$(id -g nobody)" == 65534 ]] || : ${nobody_gid_error:?Unexpected nobody gid value}
 [[ "$(getent group users | cut -d: -f3)" == 100 ]] || : ${users_gid_error:?Unexpected users gid value}
+echo "OS" $(grep -E '^(NAME|VERSION)=' /etc/os-release)
+echo "Samba" $(samba -V)
 EOF
 buildah commit "${container}" "${repobase}/${reponame}"
 images+=("${repobase}/${reponame}")
