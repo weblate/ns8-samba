@@ -7,13 +7,31 @@
     "required": [
         "provision"
     ],
+    "anyOf": [
+        {
+            "type": "object",
+            "properties": {
+                "provision": {
+                    "const": "new-domain"
+                }
+            }
+        },
+        {
+            "type": "object",
+            "required": [
+                "provision",
+                "realm"
+            ],
+            "properties": {
+                "provision": {
+                    "const": "join-domain"
+                }
+            }
+        }
+    ],
     "properties": {
         "provision": {
-            "type": "string",
-            "enum": [
-                "new-domain",
-                "join-domain"
-            ]
+            "type": "string"
         },
         "realm": {
             "type": "string",

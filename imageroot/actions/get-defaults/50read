@@ -27,6 +27,7 @@ import json
 import ipaddress as ipm
 import subprocess
 import socket
+import cluster.userdomains
 
 def fqdn2dict(fqdn, domprefix=''):
     if '.' in fqdn:
@@ -43,6 +44,21 @@ def fqdn2dict(fqdn, domprefix=''):
         "nbdomain": nbdomain,
     }
 
+def file_server_is_allowed(realm):
+    rdb = agent.redis_connect()
+    try:
+        domain = cluster.userdomains.get_internal_domains(rdb)[realm]
+    except KeyError:
+        return False
+
+    # Check if any existing provider for the given realm is already a file
+    # server:
+    for oprov in domain['providers']:
+        if oprov["file_server"]:
+            return False # No more file server allowed
+
+    return True # File server is still allowed in this realm
+
 request = json.load(sys.stdin)
 
 response = {
@@ -50,6 +66,7 @@ response = {
     "nbdomain": None,
     "hostname": None,
     "realm": None,
+    "can_install_file_server": True, # Always True for new-domain, calculated for join-domain.
     "ipaddress_list": [],
 }
 
@@ -67,6 +84,8 @@ if request['provision'] == 'new-domain':
 elif request['provision'] == 'join-domain':
     response['adminuser'] = "" # do not make assumptions on the admin join credentials
     response['nbdomain'] = ""
+    # Calculate the permission for the given Realm.
+    response['can_install_file_server'] = file_server_is_allowed(request['realm'].lower())
 else:
     print(agent.SD_ERR + "Invalid provision value", file=sys.stderr)
     sys.exit(1)
@@ -75,6 +94,11 @@ else:
 with subprocess.Popen(["ip", "-j", "-4", "address", "show"], stdout=subprocess.PIPE) as proc:
     for iface in json.load(proc.stdout):
         try:
+            # Business rule: only one DC can provide AD services to LAN
+            # clients. Only wg0 binding is otherwise allowed if a file
+            # server already exists in a realm.
+            if response['can_install_file_server'] is False and iface["ifname"] != "wg0":
+                continue
             # skip interface without bcast address; wg0 is handled specially
             if iface["ifname"] != "wg0" and not 'BROADCAST' in iface["flags"]:
                 continue

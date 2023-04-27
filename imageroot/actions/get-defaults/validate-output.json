@@ -9,6 +9,7 @@
             "adminuser": "administrator",
             "hostname": "dc2",
             "realm": "ad.dp.nethserver.net",
+            "can_install_file_server": true,
             "ipaddress_list": [
                 {
                     "ipaddress": "10.18.0.5",
@@ -45,6 +46,9 @@
         },
         "nbdomain": {
             "type": "string"
+        },
+        "can_install_file_server": {
+            "type": "boolean"
         },
         "ipaddress_list": {
             "type": "array",
