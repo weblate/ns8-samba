@@ -32,15 +32,17 @@ buildah config --cmd='' \
     --entrypoint='["/entrypoint.sh"]' \
     --env=SAMBA_LOGLEVEL="1 auth_audit:3" \
     --env=SAMBA_SHARES_DIR=/srv/shares \
+    --env=SAMBA_HOMES_DIR=/srv/homes \
     --volume=/srv/shares \
+    --volume=/srv/homes \
     --volume=/var/lib/samba \
     --volume=/etc/samba \
     "${container}"
 buildah run "${container}" -- bash <<'EOF'
 groupadd --gid=1001 administrators # alias of Administrators group
-mkdir -p "${SAMBA_SHARES_DIR:?}"
-chown -c root:administrators "${SAMBA_SHARES_DIR}"
-chmod -c 0770 "${SAMBA_SHARES_DIR}"
+mkdir -p "${SAMBA_SHARES_DIR:?}" "${SAMBA_HOMES_DIR:?}"
+chown -c root:administrators "${SAMBA_SHARES_DIR}" "${SAMBA_HOMES_DIR}"
+chmod -c 0775 "${SAMBA_SHARES_DIR}" "${SAMBA_HOMES_DIR}"
 # Verify our assumptions on the uid/gid numeric value of some well-known entries
 [[ "$(id -u nobody)" == 65534 ]] || : ${nobody_uid_error:?Unexpected nobody uid value}
 [[ "$(id -g nobody)" == 65534 ]] || : ${nobody_gid_error:?Unexpected nobody gid value}

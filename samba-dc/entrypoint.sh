@@ -22,7 +22,8 @@ if [ $# -eq 0 ]; then
     fi
     chgrp -c _chrony "${ntp_signd}"
 
-    init-shares # fix permissions on the share (and home) root directory
+    init-shares # fix permissions on the shares root directory
+    init-homes # fix permissions on the homes root directory
     samba -F --debug-stdout "${extra_args[@]}" &
     chronyd -d -x &
     wait -n

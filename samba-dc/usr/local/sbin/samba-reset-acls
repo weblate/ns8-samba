@@ -47,7 +47,11 @@ sharename="${1}"
 [ -z "${sharename}" ] && usage_error "${@}"
 
 share_root="${sharename}"
-cd "${SAMBA_SHARES_DIR}"
+if [[ -z "${is_home_dir}" ]]; then
+    cd "${SAMBA_SHARES_DIR}"
+else
+    cd "${SAMBA_HOMES_DIR}"
+fi
 
 # drop the sharename argument
 shift

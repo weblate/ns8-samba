@@ -32,6 +32,7 @@ ExecStart=/usr/bin/podman run \
     --volume=data:/var/lib/samba:z \
     --volume=config:/etc/samba:z \
     --volume=shares:/srv/shares:z \
+    --volume=homes:/srv/homes:z \
     --init \
     ${SAMBA_DC_IMAGE}
 

@@ -12,9 +12,8 @@ usage_error ()
     exec 1>&2
     [ -n "$1" ] && printf "Error: %s\n" "$1"
     printf 'Usage: %s [OPTIONS] SHARE\n' "$0"
-    printf '    SHARE (or USER)         Create a shared folder or the USER home directory\n'
-    printf '    OPTIONS (not applied to home directories)\n'
-    printf '      -H                    Create a home directory: argument SHARE is the user name\n'
+    printf '    SHARE                   Create a shared folder\n'
+    printf '    OPTIONS\n'
     printf '      -d description        Share description\n'
     printf '      -p PERMS              Permissions, one of: erw, ergrw, grw (default)\n'
     printf '      -g group              Target group name, default "%s"\n' "${group_name}"
@@ -25,16 +24,14 @@ usage_error ()
 # Default option values:
 description=
 group_name="domain users"
-is_home_dir=
 perms=grw
 
 # Parse command-line arguments
-while getopts "Hhd:g:p:" optname ; do
+while getopts "hd:g:p:" optname ; do
     case ${optname} in
         p)  perms="${OPTARG}" ;;
         d)  description="${OPTARG}" ;;
         g)  group_name="${OPTARG}" ;;
-        H)  is_home_dir=1 ;;
         h)  usage_error "${@}" ;;
         *)  usage_error "${@}" ;;
     esac
@@ -54,22 +51,15 @@ if [[ -e "${share_root}" ]]; then
     exit 2
 fi
 
-if [[ -n "${is_home_dir}" ]] && ! wbinfo -i "${sharename}" &>/dev/null ; then
-    echo "User ${sharename} not found!" 1>&2
-    exit 3
-fi
-
 if ! wbinfo --group-info "${group_name}" &>/dev/null ; then
     echo "Group ${group_name} not found!" 1>&2 
-    exit 4
+    exit 3
 fi
 
 mkdir -vp "${share_root}"
 chmod -c 0775 "${share_root}"
 chown -c "root:users" "${share_root}"
 
-if [[ -z "${is_home_dir}" ]]; then
-    net conf addshare "${sharename}" "${share_root}" writeable=y guest_ok=n "${description}"
-fi
+net conf addshare "${sharename}" "${share_root}" writeable=y guest_ok=n "${description}"
 
-exec samba-reset-acls -p "${perms}" -g "${group_name}" ${is_home_dir:+-H} "${sharename}"
+exec samba-reset-acls -p "${perms}" -g "${group_name}" "${sharename}"

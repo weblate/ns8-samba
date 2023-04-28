@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+#
+# Create the homes root directory and set permissions on it. Home dirs are
+# created under this root directory.
+#
+
+set -e
+
+: ${SAMBA_HOMES_DIR:?homes directory is not defined}
+
+mkdir -vp "${SAMBA_HOMES_DIR}"
+chown -c root:administrators "${SAMBA_HOMES_DIR}"
+chmod -c 0775 "${SAMBA_HOMES_DIR}"
+
+if ! getfattr -n user.NTACL "${SAMBA_HOMES_DIR}" &>/dev/null; then
+    # FULL access to Administrator user and "Builtin Administrators" (BA -- Domain Admins) group
+    samba-tool ntacl set 'O:LAG:BAD:PAI(A;OI;0x001f01ff;;;SY)(A;OI;0x001f01ff;;;BA)' "${SAMBA_HOMES_DIR}"
+fi

@@ -6,8 +6,8 @@
 #
 
 #
-# Create the shares root directory and set permissions on it. Home dirs
-# and shared folders are created under this root directory.
+# Create the shares root directory and set permissions on it. Shared
+# folders are created under this root directory.
 #
 
 set -e
@@ -16,7 +16,7 @@ set -e
 
 mkdir -vp "${SAMBA_SHARES_DIR}"
 chown -c root:administrators "${SAMBA_SHARES_DIR}"
-chmod -c 0770 "${SAMBA_SHARES_DIR}"
+chmod -c 0775 "${SAMBA_SHARES_DIR}"
 
 if ! getfattr -n user.NTACL "${SAMBA_SHARES_DIR}" &>/dev/null; then
     # FULL access to Administrator user and "Builtin Administrators" (BA -- Domain Admins) group

@@ -30,7 +30,8 @@ The container uses the following ports:
 - `config`, mounted on `/etc/samba`.
 - `data`, contains Samba databases and the default `sysvol` and
   `netlogon` shares. Mounted on `/var/lib/samba`.
-- `shares`, storage of shared folders and home directories, mounted on `/srv/shares`.
+- `shares`, storage of shared folders, mounted on `/srv/shares`.
+- `homes`, home directories, mounted on `/srv/homes`.
 
 ## Environment variables
 
@@ -47,9 +48,11 @@ individual command documentation for more information.
 - `DNS_FORWARDER`, if present its value is added as `dns forwarder` among
   samba startup options.
 - `SAMBA_SHARES_DIR`, default `/srv/shares`: path to the volume containing
-  user home dirs and shared folders. Do not change it! In any case do not
-  put it under `/var/lib/samba` to avoid conflicts with the backup
-  procedure.
+  shared folders. Do not change it! In any case do not put it under
+  `/var/lib/samba` to avoid conflicts with the backup procedure.
+- `SAMBA_HOMES_DIR`, default `/srv/homes`: path to the volume containing
+  user home directories. Do not change it! In any case do not put it under
+  `/var/lib/samba` to avoid conflicts with the backup procedure.
 
 ## Custom configuration
 
