@@ -9,8 +9,8 @@ EnvironmentFile=/etc/nethserver/agent.env
 EnvironmentFile=%S/state/environment
 Restart=always
 TimeoutStopSec=70
-# samba exits with 127 on SIGTERM:
-SuccessExitStatus=127
+# samba exits with 143 on SIGTERM:
+SuccessExitStatus=143
 ExecStartPre=/bin/rm -f %t/%N.pid %t/%N.cid
 ExecStartPre=runagent bash -c "(echo -n DNS_FORWARDER= ; print-nameservers) > dns_forwarder.env"
 ExecStart=/usr/bin/podman run \
