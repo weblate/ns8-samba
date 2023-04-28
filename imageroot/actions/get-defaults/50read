@@ -26,7 +26,6 @@ import agent
 import json
 import ipaddress as ipm
 import subprocess
-import socket
 import cluster.userdomains
 
 def fqdn2dict(fqdn, domprefix=''):
@@ -44,8 +43,7 @@ def fqdn2dict(fqdn, domprefix=''):
         "nbdomain": nbdomain,
     }
 
-def file_server_is_allowed(realm):
-    rdb = agent.redis_connect()
+def file_server_is_allowed(rdb, realm):
     try:
         domain = cluster.userdomains.get_internal_domains(rdb)[realm]
     except KeyError:
@@ -60,6 +58,7 @@ def file_server_is_allowed(realm):
     return True # File server is still allowed in this realm
 
 request = json.load(sys.stdin)
+rdb = agent.redis_connect()
 
 response = {
     "adminuser": "administrator",
@@ -70,13 +69,15 @@ response = {
     "ipaddress_list": [],
 }
 
-shortname = os.getenv("MODULE_ID").replace("samba", "dc")
+module_id = os.environ["MODULE_ID"]
+shortname = module_id.replace("samba", "dc")
 
 if 'realm' in request:
     fqdn = shortname + '.' + request['realm'].lower()
     response.update(fqdn2dict(fqdn))
 else:
-    fqdn = socket.gethostname().lower()
+    phostname = subprocess.run(["hostname", "-f"], stdout=subprocess.PIPE, text=True)
+    fqdn = phostname.stdout.strip().lower()
     response.update(fqdn2dict(fqdn, 'ad.'))
 
 if request['provision'] == 'new-domain':
@@ -85,7 +86,7 @@ elif request['provision'] == 'join-domain':
     response['adminuser'] = "" # do not make assumptions on the admin join credentials
     response['nbdomain'] = ""
     # Calculate the permission for the given Realm.
-    response['can_install_file_server'] = file_server_is_allowed(request['realm'].lower())
+    response['can_install_file_server'] = file_server_is_allowed(rdb, request['realm'].lower())
 else:
     print(agent.SD_ERR + "Invalid provision value", file=sys.stderr)
     sys.exit(1)
