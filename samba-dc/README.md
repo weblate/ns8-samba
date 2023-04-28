@@ -149,13 +149,13 @@ command help type:
 
     samba-add-share -h
 
-### `samba-delete-share`
+### `samba-remove-share`
 
 Remove the share configuration from the Samba registry and erase the share
 directory with all of its contents. The command takes just one argument:
 the share name.
 
-    samba-delte-share myshare1
+    samba-remove-share myshare1
 
 ### `samba-reset-acls`
 

@@ -50,13 +50,18 @@ share_root="${SAMBA_SHARES_DIR}/${sharename}"
 shift
 
 if [[ -e "${share_root}" ]]; then
-    echo "Folder ${sharename} already exists!" 1>&2 
+    echo "Directory ${sharename} already exists!" 1>&2
     exit 2
 fi
 
-if ! getent group "${group_name}" &>/dev/null ; then
+if [[ -n "${is_home_dir}" ]] && ! wbinfo -i "${sharename}" &>/dev/null ; then
+    echo "User ${sharename} not found!" 1>&2
+    exit 3
+fi
+
+if ! wbinfo --group-info "${group_name}" &>/dev/null ; then
     echo "Group ${group_name} not found!" 1>&2 
-    exit 2
+    exit 4
 fi
 
 mkdir -vp "${share_root}"
