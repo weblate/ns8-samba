@@ -47,6 +47,12 @@ chmod -c 0770 "${SAMBA_SHARES_DIR}"
 [[ "$(getent group users | cut -d: -f3)" == 100 ]] || : ${users_gid_error:?Unexpected users gid value}
 echo "OS" $(grep -E '^(NAME|VERSION)=' /etc/os-release)
 echo "Samba" $(samba -V)
+# Use an empty directory as homedir skeleton.
+mkdir -vp /var/lib/samba/skel.d
+# Create the user home directory the first time they connect.
+echo 'session optional pam_mkhomedir.so ' >> /etc/pam.d/common-session-noninteractive skel=/var/lib/samba/skel.d
+# Ubuntu HOME_MODE default value is too wide for this application.
+sed -r -i '/^HOME_MODE/ s/\b0750\b/0700/' /etc/login.defs
 EOF
 buildah commit "${container}" "${repobase}/${reponame}"
 images+=("${repobase}/${reponame}")
