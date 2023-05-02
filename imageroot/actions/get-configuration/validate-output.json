@@ -1,0 +1,48 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Get samba configuration",
+    "$id": "http://nethserver.org/json-schema/task/output/samba/get-configuration",
+    "description": "Get samba configuration",
+    "examples": [],
+    "type": "object",
+    "required": [
+        "realm",
+        "nbdomain",
+        "hostname",
+        "ipaddress"
+    ],
+    "properties": {
+        "realm": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "title": "Domain name (realm)",
+            "minLength": 1
+        },
+        "nbdomain": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "title": "NetBIOS domain name",
+            "minLength": 1
+        },
+        "hostname": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "title": "DC host name",
+            "minLength": 1
+        },
+        "ipaddress": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "title": "IP address",
+            "format": "ipv4"
+        }
+    }
+}
