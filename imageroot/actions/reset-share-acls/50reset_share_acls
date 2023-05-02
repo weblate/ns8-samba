@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import os
+import sys
+import json
+import agent
+
+podman_exec = ["podman", "exec", "samba-dc"]
+
+request = json.load(sys.stdin)
+
+samba_reset_share = podman_exec + ["samba-reset-acls", "-g", request["group"], "-p", request["permissions"], request["name"]]
+phelper = agent.run_helper(*samba_reset_share)
+
+if phelper.returncode == 0:
+    pass
+elif phelper.returncode == 2:
+    agent.set_status('validation-failed')
+    json.dump([{'field':'name', 'parameter':'name','value': request['name'], 'error':'share_not_found'}], fp=sys.stdout)
+    sys.exit(2)
+elif phelper.returncode == 3:
+    agent.set_status('validation-failed')
+    json.dump([{'field':'group', 'parameter':'group','value': request['group'], 'error':'group_not_found'}], fp=sys.stdout)
+    sys.exit(3)
+elif phelper.returncode == 4:
+    agent.set_status('validation-failed')
+    json.dump([{'field':'permissions', 'parameter':'permissions','value': request['permissions'], 'error':'invalid_permissions'}], fp=sys.stdout)
+    sys.exit(4)
+else:
+    phelper.check_returncode()
