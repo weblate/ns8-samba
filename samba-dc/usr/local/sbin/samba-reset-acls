@@ -130,6 +130,11 @@ else
     ace_everyone_root=""
 fi
 
+# Grant special access to domain controllers (DD), to read the permissions
+# (RC) of the share root directory. It is not propagated to child
+# directories.
+ace_dcs_root+="(A;;RC;;;DD)"
+
 if [[ -z "${is_home_dir}" ]]; then
     #
     # ACL for shared folders, set with inheritance flags
@@ -143,7 +148,7 @@ if [[ -z "${is_home_dir}" ]]; then
     #
     sddl_acl_file="O:LAG:DUD:AI(A;ID;${perms_full};;;SY)(A;ID;${perms_full};;;BA)${ace_group_file}${ace_everyone_file}"
     sddl_acl_sdir="O:LAG:DUD:AI(A;OICIID;${perms_full};;;SY)(A;OICIID;${perms_full};;;BA)${ace_group_sdir}${ace_everyone_sdir}"
-    sddl_acl_root="O:LAG:DUD:PAI(A;OICI;${perms_full};;;SY)(A;OICI;${perms_full};;;BA)${ace_group_root}${ace_everyone_root}"
+    sddl_acl_root="O:LAG:DUD:PAI(A;OICI;${perms_full};;;SY)(A;OICI;${perms_full};;;BA)${ace_dcs_root}${ace_group_root}${ace_everyone_root}"
 else
     #
     # ACL for home directory
@@ -159,7 +164,7 @@ else
     fi
     sddl_acl_file="O:${sid_user}G:DUD:AI(A;ID;${perms_full};;;SY)(A;ID;${perms_full};;;${sid_user})"
     sddl_acl_sdir="O:${sid_user}G:DUD:AI(A;OICIID;${perms_full};;;SY)(A;OICIID;${perms_full};;;${sid_user})"
-    sddl_acl_root="O:${sid_user}G:DUD:PAI(A;OICI;${perms_full};;;SY)(A;OICI;${perms_full};;;${sid_user})"
+    sddl_acl_root="O:${sid_user}G:DUD:PAI(A;OICI;${perms_full};;;SY)(A;OICI;${perms_full};;;${sid_user}){ace_dcs_root}"
 fi
 
 find "${share_root}" -print0 | xargs -0 -r -- setfattr -x user.NTACL --  &>/dev/null || :

@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import os
+import sys
+import json
+import subprocess
+import configparser
+
+podman_exec = ["podman", "exec", "samba-dc"]
+
+list_shares = {
+    "shares": []
+}
+
+ocfg = configparser.ConfigParser()
+with subprocess.Popen(podman_exec + ["net", "conf", "list"], stdout=subprocess.PIPE, text=True) as hconf:
+    ocfg.read_file(hconf.stdout, 'samba-registry-conf')
+
+psharenames = subprocess.run(podman_exec + ["net", "conf", "listshares"], stdout=subprocess.PIPE, text=True)
+
+for share_name in filter(None, psharenames.stdout.split("\n")):
+    comment = ocfg.get(share_name, "comment") or ""
+
+    list_shares['shares'].append({
+        "name": share_name,
+        "description": comment,
+    })
+
+json.dump(list_shares, fp=sys.stdout)
