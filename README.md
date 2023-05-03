@@ -4,7 +4,7 @@ The Samba module allows to install one or more AD domains in a NS8
 cluster. An AD domain (or realm, in Kerberos terms), can have one or more
 domain controllers (DCs). Provisioning a new domain and joining an
 additional domain controller to an existing domain are both implemented by
-the same action: `provision-domain`.
+the same action: `configure-module`.
 
 A Samba DC requires a dedicated IP address. Two DCs cannot share the same
 IP.
@@ -25,7 +25,7 @@ the core documentation for more information about Ldapproxy.
 A Samba module instance is also an account provider. It must be installed
 with the specific `add-internal-provider` action:
 
-    api-cli run add-internal-provider --data '{"image":"ghcr.io/nethserver/samba:latest","node":1}'
+    api-cli run add-internal-provider --data '{"image":"samba","node":1}'
 
 ## Provision
 
@@ -66,12 +66,54 @@ procedure fails.
 For this reason the DC IP is reachable from other nodes of the cluster
 through the cluster VPN.
 
-## Create user
+## Create a new user account
 
 To create a new user, just execute:
 ```
 podman exec -ti samba1 samba-tool user create goofy Nethesis,1234 --given-name=Goofy --surname=Goof --mail=goofy@mail.org
 ```
+
+## File server
+
+If Samba binds to the **internal VPN interface** (see `ipaddress`
+attribute in the Provision section) it is **not reachable** by clients in
+other networks.
+
+On the contrary, a Samba instance can be used as a **file server** from
+Windows-compatible clients and they can access shared folders and home
+directories with domain credentials (guest access does not work at all).
+
+- Whenever a user session is established the user's home directory is
+  created in the `homes` volume.
+
+- To create and manage shared folders, use the file server API. Shared
+  folders are stored in the `shares` volume. If a shared folder has the
+  same name of a domain user, the home directory of that user is no longer
+  accessible.
+  + `list-shares`
+  + `add-share`, `alter-share`, `remove-share`
+  + `reset-share-acls`
+
+## Restore from backup
+
+The module backup contains shared folders, home dirs and DC state.
+
+The restore procedure enforces some validation rules end exits early if
+they are not satisfied:
+
+-  the AD domain must not already exist: the restored DC must be the first
+   of the cluster for that AD domain
+-  there must be a network interface with the original backup IP address
+
+To workaround the module checks and limitations, assign the original IP
+address to a network interface with a command like:
+
+    ip addr add 192.168.122.217/24 dev eth1
+
+Then use `set-ipaddress` action to change the DC IP address. Network
+clients must be reconfigured to find the AD DNS server! For instance:
+
+    api-cli run module/samba1/set-ipaddress --data '{"ipaddress": "10.15.21.100"}'
 
 ## Migration notes
 
@@ -85,8 +127,9 @@ Migration is implemented in the `import-module` action.
   folders. A special backward-compatible configuration is applied to
   shares created by the migration procedure. The `samba-reset-acls`
   command clears that special configuration, too.
-- Home directories are migrated like shared folders. If a shareed folder
-  has the same name of a user, the home directory is not migrated.
+- Home directories are migrated like shared folders. Shared folders have
+  higher priority over home dirs: if a shared folder has the same name of
+  a domain user, the home directory cannot be accessed.
 - Guest access does not work in NS8, because it is [not implemented by the
   Samba DC
   role](https://wiki.samba.org/index.php/FAQ#How_Do_I_Enable_Guest_Access_to_a_Share_on_a_Samba_AD_DC.3F)

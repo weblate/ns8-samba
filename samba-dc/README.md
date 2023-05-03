@@ -53,6 +53,8 @@ individual command documentation for more information.
 - `SAMBA_HOMES_DIR`, default `/srv/homes`: path to the volume containing
   user home directories. Do not change it! In any case do not put it under
   `/var/lib/samba` to avoid conflicts with the backup procedure.
+- `SAMBA_LOGLEVEL`, default `1`: value for the `log level` configuration
+  directive.
 
 ## Custom configuration
 
@@ -71,8 +73,8 @@ If any argument is passed to the container entrypoint it is interpreted as
 a command to execute. This behavior is required to run `new-domain` and
 `join-domain`.
 
-If no arguments are passed, `init-shares` is executed, then the normal
-services are started:
+If no arguments are passed, `init-shares` and `init-homes` are executed,
+then the normal services are started:
 
 - `samba`
 - `chronyd`
@@ -92,11 +94,11 @@ environment variables.
 - `/etc/samba/smb.conf`
 - `/etc/resolv.conf`
 
-### `init-shares`
+### `init-shares` and `init-homes`
 
-The `init-shares` command creates the root directory for shared folder and
-home directories. It ensures proper ownership, permissions and Windows
-ACLs are set for it.
+The `init-shares` and `init-homes` commands create the root directory for
+shared folders and home directories, respectively. They ensure proper
+ownership, permissions and Windows ACLs are set.
 
 ### `new-domain`
 

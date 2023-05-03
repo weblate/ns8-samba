@@ -50,7 +50,7 @@ cat - >/etc/samba/smb.conf <<EOF
         realm = ${REALM^^}
         server role = active directory domain controller
         workgroup = ${NBDOMAIN}
-        log level = ${SAMBA_LOGLEVEL}
+        log level = ${SAMBA_LOGLEVEL:-1}
 
         acl_xattr:security_acl_name = user.NTACL
         acl_xattr:ignore system acls = yes
