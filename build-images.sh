@@ -28,15 +28,10 @@ container=$(buildah from "${repobase}/${reponame}")
 reponame="samba-dc"
 buildah run "${container}" -- mv -v /etc/samba/smb.conf /etc/samba/smb.conf.${ubuntu_tag}
 buildah add "${container}" samba-dc/ /
-buildah config --cmd='' \
-    --entrypoint='["/entrypoint.sh"]' \
+buildah config \
     --env=SAMBA_LOGLEVEL="1 auth_audit:3" \
     --env=SAMBA_SHARES_DIR=/srv/shares \
     --env=SAMBA_HOMES_DIR=/srv/homes \
-    --volume=/srv/shares \
-    --volume=/srv/homes \
-    --volume=/var/lib/samba \
-    --volume=/etc/samba \
     "${container}"
 buildah run "${container}" -- bash <<'EOF'
 groupadd --gid=1001 administrators # alias of Administrators group
@@ -49,13 +44,18 @@ chmod -c 0775 "${SAMBA_SHARES_DIR}" "${SAMBA_HOMES_DIR}"
 [[ "$(getent group users | cut -d: -f3)" == 100 ]] || : ${users_gid_error:?Unexpected users gid value}
 echo "OS" $(grep -E '^(NAME|VERSION)=' /etc/os-release)
 echo "Samba" $(samba -V)
-# Use an empty directory as homedir skeleton.
+# Initialize an empty directory as homedir skeleton.
 mkdir -vp /var/lib/samba/skel.d
-# Create the user home directory the first time they connect.
-echo 'session optional pam_mkhomedir.so ' >> /etc/pam.d/common-session-noninteractive skel=/var/lib/samba/skel.d
 # Ubuntu HOME_MODE default value is too wide for this application.
 sed -r -i '/^HOME_MODE/ s/\b0750\b/0700/' /etc/login.defs
 EOF
+buildah config --cmd='' \
+    --entrypoint='["/entrypoint.sh"]' \
+    --volume=/srv/shares \
+    --volume=/srv/homes \
+    --volume=/var/lib/samba \
+    --volume=/etc/samba \
+    "${container}"
 buildah commit "${container}" "${repobase}/${reponame}"
 images+=("${repobase}/${reponame}")
 
