@@ -12,6 +12,46 @@ import subprocess
 import configparser
 
 podman_exec = ["podman", "exec", "samba-dc"]
+nbdomain = os.environ["NBDOMAIN"]
+
+def read_acls(share_name):
+    """
+    Parse smbcacls output and translate it to our acls format
+    """
+    pacls = subprocess.run(
+        podman_exec + ["smbcacls", "-P", "//127.0.0.1/" + share_name, ""],
+        text=True, stdout=subprocess.PIPE)
+    if pacls.returncode != 0:
+        return [] # The command has failed
+
+    acls = []
+    for iline in filter(None, pacls.stdout.split("\n")):
+        ifields = iline.split(":")
+        if ifields[0] != "ACL":
+            continue # Consider only Access Control Entries
+        elif ifields[1] == "NT AUTHORITY\\SYSTEM":
+            continue # Ignore ACE for SYSTEM
+
+        subject_name = ifields[1].removeprefix(nbdomain + "\\")
+        ace_type, _, ace_rights = ifields[2].split("/", 2)
+
+        if ace_type != "ALLOWED":
+            rights = "special"
+        elif ace_rights == "FULL":
+            rights = "full"
+        elif ace_rights == "READ":
+            rights = "ro"
+        elif ace_rights == "RWXD":
+            rights = "rw"
+        else:
+            rights = "special"
+
+        acls.append({
+            "subject": subject_name,
+            "rights": rights,
+        })
+
+    return acls
 
 list_shares = {
     "shares": []
@@ -22,13 +62,13 @@ with subprocess.Popen(podman_exec + ["net", "conf", "list"], stdout=subprocess.P
     ocfg.read_file(hconf.stdout, 'samba-registry-conf')
 
 psharenames = subprocess.run(podman_exec + ["net", "conf", "listshares"], stdout=subprocess.PIPE, text=True)
-
 for share_name in filter(None, psharenames.stdout.split("\n")):
     comment = ocfg.get(share_name, "comment") or ""
 
     list_shares['shares'].append({
         "name": share_name,
         "description": comment,
+        "acls": read_acls(share_name),
     })
 
 json.dump(list_shares, fp=sys.stdout)
