@@ -5,6 +5,7 @@ Variables   ./vars.py
 
 *** Test Cases ***
 Add the module to the cluster
+    [Tags]    create    instance
     ${module_id} =    Create a module instance
     Set Global Variable    ${MID1}    ${module_id}
 
