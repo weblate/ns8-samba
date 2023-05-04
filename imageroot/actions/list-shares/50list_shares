@@ -16,7 +16,7 @@ nbdomain = os.environ["NBDOMAIN"]
 
 def read_acls(share_name):
     """
-    Parse smbcacls output and translate it to our acls format
+    Parse smbcacls output and translate it to our simple ACLs format
     """
     pacls = subprocess.run(
         podman_exec + ["smbcacls", "-P", "//127.0.0.1/" + share_name, ""],
@@ -25,12 +25,21 @@ def read_acls(share_name):
         return [] # The command has failed
 
     acls = []
+    def subject_index(subject_name):
+        """
+        Return the index in the acls array of the first ACL with
+        subject_name. If the subject is not found return -1
+        """
+        for idx, acl in enumerate(acls):
+            if acl["subject"] == subject_name:
+                return idx
+
+        return -1
+
     for iline in filter(None, pacls.stdout.split("\n")):
         ifields = iline.split(":")
         if ifields[0] != "ACL":
-            continue # Consider only Access Control Entries
-        elif ifields[1] == "NT AUTHORITY\\SYSTEM":
-            continue # Ignore ACE for SYSTEM
+            continue # Consider only ACL entries
 
         subject_name = ifields[1].removeprefix(nbdomain + "\\")
         ace_type, _, ace_rights = ifields[2].split("/", 2)
@@ -46,10 +55,14 @@ def read_acls(share_name):
         else:
             rights = "special"
 
-        acls.append({
-            "subject": subject_name,
-            "rights": rights,
-        })
+        idx = subject_index(subject_name)
+        if idx >=0:
+            # Multiple entries for the same subject are forced to rights=special
+            # We use the index to preserve the ordering returned by smbcacls
+            acls[idx]["rights"] = "special"
+        else:
+            # New subject, assign rights
+            acls.append({"subject": subject_name, "rights": rights})
 
     return acls
 
