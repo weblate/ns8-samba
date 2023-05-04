@@ -34,10 +34,8 @@ buildah config \
     --env=SAMBA_HOMES_DIR=/srv/homes \
     "${container}"
 buildah run "${container}" -- bash <<'EOF'
-groupadd --gid=1001 administrators # alias of Administrators group
-mkdir -p "${SAMBA_SHARES_DIR:?}" "${SAMBA_HOMES_DIR:?}"
-chown -c root:administrators "${SAMBA_SHARES_DIR}" "${SAMBA_HOMES_DIR}"
-chmod -c 0775 "${SAMBA_SHARES_DIR}" "${SAMBA_HOMES_DIR}"
+mkdir -m 0755 -p "${SAMBA_SHARES_DIR:?}" "${SAMBA_HOMES_DIR:?}"
+chown -c root:root "${SAMBA_SHARES_DIR}" "${SAMBA_HOMES_DIR}"
 # Verify our assumptions on the uid/gid numeric value of some well-known entries
 [[ "$(id -u nobody)" == 65534 ]] || : ${nobody_uid_error:?Unexpected nobody uid value}
 [[ "$(id -g nobody)" == 65534 ]] || : ${nobody_gid_error:?Unexpected nobody gid value}

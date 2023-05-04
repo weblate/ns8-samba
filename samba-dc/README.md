@@ -73,8 +73,7 @@ If any argument is passed to the container entrypoint it is interpreted as
 a command to execute. This behavior is required to run `new-domain` and
 `join-domain`.
 
-If no arguments are passed, `init-shares` and `init-homes` are executed,
-then the normal services are started:
+If no arguments are passed, the normal services are started:
 
 - `samba`
 - `chronyd`
@@ -93,12 +92,6 @@ environment variables.
 - `/etc/krb5.conf`
 - `/etc/samba/smb.conf`
 - `/etc/resolv.conf`
-
-### `init-shares` and `init-homes`
-
-The `init-shares` and `init-homes` commands create the root directory for
-shared folders and home directories, respectively. They ensure proper
-ownership, permissions and Windows ACLs are set.
 
 ### `new-domain`
 
