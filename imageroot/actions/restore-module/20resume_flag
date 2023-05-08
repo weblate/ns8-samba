@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import agent
+import json
+import sys
+import os
+import ipaddress
+
+request = json.load(sys.stdin)
+
+with agent.redis_connect() as rdb:
+    cluster_network = ipaddress.ip_network(rdb.get('cluster/network'))
+
+samba_ipaddress = os.environ['IPADDRESS']
+module_id = os.environ['MODULE_ID']
+prdb = agent.redis_connect(privileged=True)
+
+if ipaddress.ip_address(samba_ipaddress) not in cluster_network:
+    # The instance is bound to a local network IP address: mark it with
+    # the "file_server" flag, to enforce our business rules about Samba
+    # DCs and file server instances.
+    prdb.sadd(f"module/{module_id}/flags", "file_server")
