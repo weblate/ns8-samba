@@ -1,7 +1,7 @@
 {
   "name": "Samba",
   "description": {
-    "en": "Implementation of Active Directory services and SMB networking protocol"
+    "en": "Active Directory services and file sharing with SMB networking protocol"
   },
   "categories": [],
   "authors": [
