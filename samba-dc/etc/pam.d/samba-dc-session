@@ -1,0 +1,29 @@
+#
+# samba-dc-session -- session configuration for samba-dc
+#
+# 1. set the session umask to obtain Unix permissions rw-rw-r on new files
+# 2. initialize the user's home directory
+#
+
+# Skip one module, the pam_deny one. Why? I don't know, I suppose this is
+# just a PAM health check vodoo:
+session [default=1] pam_permit.so
+session requisite   pam_deny.so
+session required    pam_permit.so
+
+#
+# Umask setup -- Set up the maximum Unix rights
+#
+# The AD "Domain Users" group is mapped to the "users" Unix group. Shared
+# folders are owned by root:users. To grant write access, preserve the
+# group write bit. And deny global write access.
+#
+# Ultimate access control to files and directories is delegated to Samba
+# vfs_acl_xattr module.
+session optional    pam_umask.so umask=0002
+
+# Skip the next module if user is a computer account (glob pattern *$)
+session [default=1 success=ignore] pam_succeed_if.so user !~ *$
+
+# Create the user home directory the first time they connect
+session optional pam_mkhomedir.so skel=/var/lib/samba/skel.d

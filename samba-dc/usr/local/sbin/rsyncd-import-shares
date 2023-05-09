@@ -35,6 +35,14 @@ read only = no
 munge symlinks = no
 hosts allow = 127.0.0.1 ::1 ${RSYNCD_NETWORK:-0.0.0.0/0}
 
+[homes]
+path = /srv/homes
+# Accept only the DOSATTRIB extended attribute
+filter = -x! user.DOSATTRIB
+read only = no
+munge symlinks = no
+hosts allow = 127.0.0.1 ::1 ${RSYNCD_NETWORK:-0.0.0.0/0}
+
 [terminate]
 # An empty directory:
 path = /var/lib/misc
@@ -53,6 +61,11 @@ while ! wbinfo -p &>/dev/null; do
 done
 
 rsync --daemon --no-detach --log-file=/dev/stderr # ready to receive data!
+
+# Fix ownership and permissions of volume roots, if the client has changed
+# them:
+chown -c root:root "${SAMBA_SHARES_DIR}" "${SAMBA_HOMES_DIR}"
+chmod -c 0755 "${SAMBA_SHARES_DIR}" "${SAMBA_HOMES_DIR}"
 
 echo "Now reading shares metadata from stdin..."
 # Expecting data in TSV format: sharename <TAB> description <LF>

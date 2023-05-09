@@ -28,26 +28,32 @@ container=$(buildah from "${repobase}/${reponame}")
 reponame="samba-dc"
 buildah run "${container}" -- mv -v /etc/samba/smb.conf /etc/samba/smb.conf.${ubuntu_tag}
 buildah add "${container}" samba-dc/ /
-buildah config --cmd='' \
-    --entrypoint='["/entrypoint.sh"]' \
+buildah config \
     --env=SAMBA_LOGLEVEL="1 auth_audit:3" \
     --env=SAMBA_SHARES_DIR=/srv/shares \
-    --volume=/srv/shares \
-    --volume=/var/lib/samba \
-    --volume=/etc/samba \
+    --env=SAMBA_HOMES_DIR=/srv/homes \
     "${container}"
 buildah run "${container}" -- bash <<'EOF'
-groupadd --gid=1001 administrators # alias of Administrators group
-mkdir -p "${SAMBA_SHARES_DIR:?}"
-chown -c root:administrators "${SAMBA_SHARES_DIR}"
-chmod -c 0770 "${SAMBA_SHARES_DIR}"
+mkdir -m 0755 -p "${SAMBA_SHARES_DIR:?}" "${SAMBA_HOMES_DIR:?}"
+chown -c root:root "${SAMBA_SHARES_DIR}" "${SAMBA_HOMES_DIR}"
 # Verify our assumptions on the uid/gid numeric value of some well-known entries
 [[ "$(id -u nobody)" == 65534 ]] || : ${nobody_uid_error:?Unexpected nobody uid value}
 [[ "$(id -g nobody)" == 65534 ]] || : ${nobody_gid_error:?Unexpected nobody gid value}
 [[ "$(getent group users | cut -d: -f3)" == 100 ]] || : ${users_gid_error:?Unexpected users gid value}
 echo "OS" $(grep -E '^(NAME|VERSION)=' /etc/os-release)
 echo "Samba" $(samba -V)
+# Initialize an empty directory as homedir skeleton.
+mkdir -vp /var/lib/samba/skel.d
+# Ubuntu HOME_MODE default value is too wide for this application.
+sed -r -i '/^HOME_MODE/ s/\b0750\b/0700/' /etc/login.defs
 EOF
+buildah config --cmd='' \
+    --entrypoint='["/entrypoint.sh"]' \
+    --volume=/srv/shares \
+    --volume=/srv/homes \
+    --volume=/var/lib/samba \
+    --volume=/etc/samba \
+    "${container}"
 buildah commit "${container}" "${repobase}/${reponame}"
 images+=("${repobase}/${reponame}")
 

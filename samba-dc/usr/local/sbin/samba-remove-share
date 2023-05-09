@@ -11,6 +11,11 @@ sharename="${1:?missing sharename argument}"
 
 share_path="${SAMBA_SHARES_DIR}/${sharename}"
 
-net -d 1 conf delshare "${@}" || : # Ignore failure for home dirs
+net conf delshare "${sharename}" &>/dev/null || : # Ignore failure for home dirs
+
+if ! [[ -d "${share_path}" ]]; then
+    echo "Directory ${sharename} not found" 1>&2
+    exit 2
+fi
 
 rm -rf "${share_path}"

@@ -29,6 +29,7 @@ exec podman run --rm \
     --volume=data:/var/lib/samba:z \
     --volume=config:/etc/samba:z \
     --volume=shares:/srv/shares:z \
+    --volume=homes:/srv/homes:z \
     "${SAMBA_DC_IMAGE:?}" bash -s <<'EOF'
 # Errors are fatal
 set -e

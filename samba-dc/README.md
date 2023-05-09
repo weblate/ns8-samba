@@ -30,7 +30,8 @@ The container uses the following ports:
 - `config`, mounted on `/etc/samba`.
 - `data`, contains Samba databases and the default `sysvol` and
   `netlogon` shares. Mounted on `/var/lib/samba`.
-- `shares`, storage of shared folders and home directories, mounted on `/srv/shares`.
+- `shares`, storage of shared folders, mounted on `/srv/shares`.
+- `homes`, home directories, mounted on `/srv/homes`.
 
 ## Environment variables
 
@@ -47,9 +48,13 @@ individual command documentation for more information.
 - `DNS_FORWARDER`, if present its value is added as `dns forwarder` among
   samba startup options.
 - `SAMBA_SHARES_DIR`, default `/srv/shares`: path to the volume containing
-  user home dirs and shared folders. Do not change it! In any case do not
-  put it under `/var/lib/samba` to avoid conflicts with the backup
-  procedure.
+  shared folders. Do not change it! In any case do not put it under
+  `/var/lib/samba` to avoid conflicts with the backup procedure.
+- `SAMBA_HOMES_DIR`, default `/srv/homes`: path to the volume containing
+  user home directories. Do not change it! In any case do not put it under
+  `/var/lib/samba` to avoid conflicts with the backup procedure.
+- `SAMBA_LOGLEVEL`, default `1`: value for the `log level` configuration
+  directive.
 
 ## Custom configuration
 
@@ -68,8 +73,7 @@ If any argument is passed to the container entrypoint it is interpreted as
 a command to execute. This behavior is required to run `new-domain` and
 `join-domain`.
 
-If no arguments are passed, `init-shares` is executed, then the normal
-services are started:
+If no arguments are passed, the normal services are started:
 
 - `samba`
 - `chronyd`
@@ -88,12 +92,6 @@ environment variables.
 - `/etc/krb5.conf`
 - `/etc/samba/smb.conf`
 - `/etc/resolv.conf`
-
-### `init-shares`
-
-The `init-shares` command creates the root directory for shared folder and
-home directories. It ensures proper ownership, permissions and Windows
-ACLs are set for it.
 
 ### `new-domain`
 
@@ -149,13 +147,13 @@ command help type:
 
     samba-add-share -h
 
-### `samba-delete-share`
+### `samba-remove-share`
 
 Remove the share configuration from the Samba registry and erase the share
 directory with all of its contents. The command takes just one argument:
 the share name.
 
-    samba-delte-share myshare1
+    samba-remove-share myshare1
 
 ### `samba-reset-acls`
 

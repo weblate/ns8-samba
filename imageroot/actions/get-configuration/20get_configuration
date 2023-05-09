@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import json
+import sys
+import os
+
+if 'REALM' in os.environ:
+    realm = os.environ["REALM"].lower()
+else:
+    realm = None
+
+config = {
+    'realm': realm,
+    'nbdomain': os.getenv('NBDOMAIN'),
+    'ipaddress': os.getenv('IPADDRESS'),
+    'hostname': os.getenv('HOSTNAME')
+}
+
+json.dump(config, fp=sys.stdout)

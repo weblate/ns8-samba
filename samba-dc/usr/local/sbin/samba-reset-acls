@@ -47,7 +47,11 @@ sharename="${1}"
 [ -z "${sharename}" ] && usage_error "${@}"
 
 share_root="${sharename}"
-cd "${SAMBA_SHARES_DIR}"
+if [[ -z "${is_home_dir}" ]]; then
+    cd "${SAMBA_SHARES_DIR}"
+else
+    cd "${SAMBA_HOMES_DIR}"
+fi
 
 # drop the sharename argument
 shift
@@ -60,7 +64,7 @@ fi
 sid_group="$(wbinfo -n "${group_name}" | awk '{print $1}')"
 if [[ -z "${sid_group}" ]]; then
     echo "SID not found for ${group_name}" 1>&2
-    exit 2
+    exit 3
 fi
 
 if [[ -z "${is_home_dir}" ]]; then
@@ -99,7 +103,7 @@ elif [[ "${perms}" == grw ]]; then
     everyone_rights=""
 else
     echo "Unknown perms value: ${perms}" 1>&2
-    exit 2
+    exit 4
 fi
 
 # Translate group rights to ACEs
@@ -133,13 +137,18 @@ if [[ -z "${is_home_dir}" ]]; then
     # User owner: LA=Local Administrator (can override permissions)
     # Group owner: DU=Domain users (just for quota calculation)
     #
-    # - FULL access to System
-    # - FULL access to BA=Builtin administrators (Domain admins are included)
-    # - Additional ACE for group
+    # - Special access to to domain controllers (DD), to read the
+    #   permissions (RC) of the share root directory. It is not propagated
+    #   to child directories (sddl_acl_root only).
+    # - FULL access to BA=Builtin administrators (Domain admins are
+    #   included) and SY=SYSTEM [1]
+    # - Additional ACEs for group and everyone if required
+    #
+    # [1] https://wiki.samba.org/index.php/The_SYSTEM_Account#Using_the_SYSTEM_Account_in_File_System_ACLs_on_a_Samba_Server
     #
     sddl_acl_file="O:LAG:DUD:AI(A;ID;${perms_full};;;SY)(A;ID;${perms_full};;;BA)${ace_group_file}${ace_everyone_file}"
     sddl_acl_sdir="O:LAG:DUD:AI(A;OICIID;${perms_full};;;SY)(A;OICIID;${perms_full};;;BA)${ace_group_sdir}${ace_everyone_sdir}"
-    sddl_acl_root="O:LAG:DUD:PAI(A;OICI;${perms_full};;;SY)(A;OICI;${perms_full};;;BA)${ace_group_root}${ace_everyone_root}"
+    sddl_acl_root="O:LAG:DUD:PAI(A;;RC;;;DD)(A;OICI;${perms_full};;;SY)(A;OICI;${perms_full};;;BA)${ace_group_root}${ace_everyone_root}"
 else
     #
     # ACL for home directory
@@ -151,7 +160,7 @@ else
     fi
     if [[ "${sid_type}" != SID_USER ]]; then
         echo "${sharename} is not a user" 1>&2
-        exit 4
+        exit 3
     fi
     sddl_acl_file="O:${sid_user}G:DUD:AI(A;ID;${perms_full};;;SY)(A;ID;${perms_full};;;${sid_user})"
     sddl_acl_sdir="O:${sid_user}G:DUD:AI(A;OICIID;${perms_full};;;SY)(A;OICIID;${perms_full};;;${sid_user})"

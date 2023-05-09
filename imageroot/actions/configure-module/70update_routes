@@ -32,7 +32,6 @@ import ipaddress as ipm
 # Symlinked by import-module/52update_routes_symlink
 #
 
-realm = os.environ['REALM']
 node_id = int(os.environ['NODE_ID'])
 
 rdb = agent.redis_connect()

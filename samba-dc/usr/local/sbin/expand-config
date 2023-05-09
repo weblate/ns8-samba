@@ -50,12 +50,13 @@ cat - >/etc/samba/smb.conf <<EOF
         realm = ${REALM^^}
         server role = active directory domain controller
         workgroup = ${NBDOMAIN}
-        log level = ${SAMBA_LOGLEVEL}
+        log level = ${SAMBA_LOGLEVEL:-1}
 
         acl_xattr:security_acl_name = user.NTACL
         acl_xattr:ignore system acls = yes
 
-        template homedir = ${SAMBA_SHARES_DIR:?}/%U
+        template homedir = ${SAMBA_HOMES_DIR:?}/%U
+        obey pam restrictions = yes
 
         registry shares = yes
         inherit owner = yes

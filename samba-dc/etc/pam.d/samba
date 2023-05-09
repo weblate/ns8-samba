@@ -1,0 +1,6 @@
+#
+# samba-dc -- override the distro configuration for Samba
+#
+@include common-auth
+@include common-account
+@include samba-dc-session
