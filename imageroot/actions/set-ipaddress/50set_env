@@ -8,6 +8,7 @@
 import agent
 import json
 import sys
+import os
 import ipaddress
 
 request = json.load(sys.stdin)
@@ -15,8 +16,18 @@ request = json.load(sys.stdin)
 with agent.redis_connect() as rdb:
     cluster_network = ipaddress.ip_network(rdb.get('cluster/network'))
 
+module_id = os.environ['MODULE_ID']
+prdb = agent.redis_connect(privileged=True)
+
 agent.set_env('IPADDRESS', request['ipaddress'])
 if ipaddress.ip_address(request['ipaddress']) in cluster_network:
     agent.set_env('PREFIXLEN', str(cluster_network.prefixlen))
+    # The instance is bound to a VPN IP address: clean up the
+    # "file_server" flag because it cannot serve shared folders at all
+    prdb.srem(f"module/{module_id}/flags", "file_server")
 else:
     agent.unset_env('PREFIXLEN')
+    # The instance is bound to a local network IP address: mark it with
+    # the "file_server" flag, to enforce our business rules about Samba
+    # DCs and file server instances.
+    prdb.sadd(f"module/{module_id}/flags", "file_server")
