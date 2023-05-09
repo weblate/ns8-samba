@@ -1,0 +1,19 @@
+{
+  "name": "Samba",
+  "description": {
+    "en": "Implementation of Active Directory services and SMB networking protocol"
+  },
+  "categories": [],
+  "authors": [
+    {
+      "name": "NethServer team",
+      "email": "nethserver@nethesis.it"
+    }
+  ],
+  "docs": {
+    "documentation_url": "https://www.samba.org/",
+    "bug_url": "https://github.com/NethServer/dev",
+    "code_url": "https://github.com/NethServer/ns8-samba"
+  },
+  "source": "ghcr.io/nethserver/samba"
+}
