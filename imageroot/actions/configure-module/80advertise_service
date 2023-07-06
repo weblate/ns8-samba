@@ -34,6 +34,9 @@ svcpass = os.environ['SVCPASS']
 svcuser = os.environ['SVCUSER']
 ip_address = os.environ['IPADDRESS']
 
+if not "PROVISION_TYPE" in os.environ:
+    sys.exit(0)
+
 data={
     "node": str(node_id),
     "port": "636",

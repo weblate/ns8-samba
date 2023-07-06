@@ -50,5 +50,7 @@ rm -rvf restore backup
 net cache flush
 EOF
 
-# Enable and start the NSDC service
-systemctl --user enable --now samba-dc.service
+if [[ -n "${PROVISION_TYPE}" ]]; then
+    # Enable and start the NSDC service
+    systemctl --user enable --now samba-dc.service
+fi

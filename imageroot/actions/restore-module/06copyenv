@@ -23,13 +23,14 @@
 import sys
 import json
 import agent
+import os
+import samba
 
 request = json.load(sys.stdin)
 
 original_environment = request['environment']
 
 for evar in [
-        'PROVISION_TYPE',
         'NBDOMAIN',
         'REALM',
         'SVCUSER',

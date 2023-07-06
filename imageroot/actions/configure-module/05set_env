@@ -35,10 +35,6 @@ realm = request['realm'].upper()
 hostname = request['hostname'].lower()
 provision_type = request['provision']
 
-if 'REALM' in os.environ:
-    print(agent.SD_ERR + "This module is already configured!", file=sys.stderr)
-    sys.exit(1)
-
 with agent.redis_connect() as rdb:
     cluster_network = ipaddress.ip_network(rdb.get('cluster/network'))
     domains = cluster.userdomains.get_internal_domains(rdb)
