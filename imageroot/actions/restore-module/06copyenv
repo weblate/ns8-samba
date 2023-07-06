@@ -32,7 +32,6 @@ for evar in [
         'PROVISION_TYPE',
         'NBDOMAIN',
         'REALM',
-        'IPADDRESS',
         'SVCUSER',
         'SVCPASS',
     ]:
@@ -58,3 +57,18 @@ def generate_new_dc_name(name):
 
 hname, _ = original_environment['HOSTNAME'].split('.', 1) # short hostname
 agent.set_env('HOSTNAME', generate_new_dc_name(hname) + '.' + original_environment['REALM'].lower())
+
+#
+# If IPADDRESS is not on this system, replace it with the VPN IP address:
+#
+ipaddress = original_environment['IPADDRESS']
+node_id = os.environ["NODE_ID"]
+try:
+    samba.ipaddress_check(ipaddress)
+except samba.IpNotAvailable:
+    with agent.redis_connect(use_replica=True) as rdb:
+        ipaddress = rdb.hget(f"node/{node_id}/vpn", "ip_address")
+    if not ipaddress:
+        raise
+
+agent.set_env('IPADDRESS', ipaddress)

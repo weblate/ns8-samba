@@ -27,7 +27,6 @@ import os
 import samba
 import cluster.userdomains
 
-
 agent.set_weight(os.path.basename(__file__), 0) # Validation step, no task progress at all
 
 request = json.load(sys.stdin)
@@ -44,16 +43,14 @@ except samba.IpNotPrivate:
     json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ipaddress,"error":"ipaddress_private_check_failed"}], fp=sys.stdout)
     sys.exit(2)
 except samba.IpNotAvailable:
-    agent.set_status('validation-failed')
-    json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ipaddress,"error":"ipaddress_avail_check_failed"}], fp=sys.stdout)
-    sys.exit(3)
+    print(agent.SD_NOTICE + f"IP address {ipaddress} not found. Falling back to VPN IP address", file=sys.stderr)
 except samba.IpBindError as ex:
     print(ex, file=sys.stderr)
     agent.set_status('validation-failed')
     json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ex.ipaddr,"error":"ipaddress_bind_check_failed"}], fp=sys.stdout)
     sys.exit(4)
 
-rdb = agent.redis_connect(host='127.0.0.1')
+rdb = agent.redis_connect(use_replica=True)
 
 domains = cluster.userdomains.get_internal_domains(rdb) | cluster.userdomains.get_external_domains(rdb)
 if realm in domains:
