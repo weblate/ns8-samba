@@ -41,18 +41,21 @@ for evar in [
 # The "samba-tool domain backup restore" procedure expects a new DC hostname,
 # a new one must be provided, now!
 def generate_new_dc_name(name):
-    if len(name) > 1 and (name[-2].isnumeric() and name[-1].isalpha()):
-        newname = name[:-2] + \
-                alphabet[(1 + alphabet.find(name[-2])) % len(alphabet)] + \
-                alphabet[(1 + alphabet.find(name[-1])) % len(alphabet)]
+    """Append a suffix rN to the host name. If such suffix is already
+    present, replace it with r(N+1)"""
 
-    elif name[-1].isnumeric():
-        newname = name + 'r'
-    else:
-        newname = name + '0'
+    try:
+        prefix, suffix = name.rsplit("r", 1)
+    except ValueError:
+        prefix = name
+        suffix = '0'
 
-    if len(newname) > 14:
-        newname = newname[:13] + newname[-2:]
+    try:
+        suffix = str(int(suffix) + 1)
+    except ValueError:
+        suffix = suffix + 'r1'
+
+    newname = prefix + 'r' + suffix
 
     return newname
 
