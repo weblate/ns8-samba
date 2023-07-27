@@ -87,8 +87,8 @@ See also the [Core VPN documentation](https://nethserver.github.io/ns8-core/core
 
 Create a new user and assign it to the `developers` group
 
-  api-cli run module/samba1/add-user --data - <<EOF
-  {
+    api-cli run module/samba1/add-user --data - <<EOF
+    {
       "user": "alice",
       "display_name": "Alice Jordan",
       "password": "secret",
@@ -96,8 +96,8 @@ Create a new user and assign it to the `developers` group
       "groups": [
           "developers"
       ]
-  }
-  EOF
+    }
+    EOF
 
 ## File server
 
