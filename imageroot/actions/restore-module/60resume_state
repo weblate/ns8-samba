@@ -25,6 +25,7 @@ set -e
 
 echo "Resume Samba DC state:"
 podman run --hostname="${HOSTNAME}" --interactive --workdir=/var/lib/samba \
+    --log-driver=none \
     --replace --name="${MODULE_ID}" --rm \
     --entrypoint=[] \
     --volume="config":/etc/samba \
