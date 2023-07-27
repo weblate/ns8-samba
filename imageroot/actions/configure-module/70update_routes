@@ -30,6 +30,7 @@ import ipaddress as ipm
 #
 # Check if routes for this new DC must be added automatically
 # Symlinked by import-module/52update_routes_symlink
+# Symlinked by restore-module/70update_routes_symlink
 #
 
 node_id = int(os.environ['NODE_ID'])

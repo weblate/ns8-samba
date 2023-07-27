@@ -18,10 +18,13 @@ with agent.redis_connect() as rdb:
 
 samba_ipaddress = os.environ['IPADDRESS']
 module_id = os.environ['MODULE_ID']
-prdb = agent.redis_connect(privileged=True)
 
-if ipaddress.ip_address(samba_ipaddress) not in cluster_network:
+if ipaddress.ip_address(samba_ipaddress) in cluster_network:
+    agent.set_env('PREFIXLEN', str(cluster_network.prefixlen))
+else:
+    agent.unset_env('PREFIXLEN')
     # The instance is bound to a local network IP address: mark it with
     # the "file_server" flag, to enforce our business rules about Samba
     # DCs and file server instances.
-    prdb.sadd(f"module/{module_id}/flags", "file_server")
+    with agent.redis_connect(privileged=True) as prdb:
+        prdb.sadd(f"module/{module_id}/flags", "file_server")

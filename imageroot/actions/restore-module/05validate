@@ -27,14 +27,14 @@ import os
 import samba
 import cluster.userdomains
 
-
 agent.set_weight(os.path.basename(__file__), 0) # Validation step, no task progress at all
 
 request = json.load(sys.stdin)
 
 original_environment = request['environment']
 ipaddress = original_environment['IPADDRESS']
-realm = original_environment['REALM']
+realm = original_environment['REALM'].lower()
+module_id = os.environ["MODULE_ID"]
 
 try:
     # This is a disaster recovery: restore on the same node/ip address!
@@ -44,20 +44,24 @@ except samba.IpNotPrivate:
     json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ipaddress,"error":"ipaddress_private_check_failed"}], fp=sys.stdout)
     sys.exit(2)
 except samba.IpNotAvailable:
-    agent.set_status('validation-failed')
-    json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ipaddress,"error":"ipaddress_avail_check_failed"}], fp=sys.stdout)
-    sys.exit(3)
+    print(agent.SD_NOTICE + f"IP address {ipaddress} not found. Falling back to VPN IP address", file=sys.stderr)
 except samba.IpBindError as ex:
     print(ex, file=sys.stderr)
     agent.set_status('validation-failed')
     json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ex.ipaddr,"error":"ipaddress_bind_check_failed"}], fp=sys.stdout)
     sys.exit(4)
 
-rdb = agent.redis_connect(host='127.0.0.1')
+rdb = agent.redis_connect(use_replica=True)
 
-domains = cluster.userdomains.get_internal_domains(rdb) | cluster.userdomains.get_external_domains(rdb)
-if realm in domains:
-    # This is a disaster recovery: the domain must not exist!
+if realm in cluster.userdomains.get_external_domains(rdb):
+    # Fail if "realm" matches an already existing domain
     agent.set_status('validation-failed')
     json.dump([{'field':'realm', 'parameter':'realm','value': realm, 'error':'domain_already_exists'}], fp=sys.stdout)
     sys.exit(5)
+elif realm in cluster.userdomains.get_internal_domains(rdb):
+    # If "realm" matches an internal domain, skip DC startup to join it
+    # manually later
+    with agent.redis_connect(privileged=True) as rdbw:
+        rdbw.set(f"module/{module_id}/user_domain", realm)
+else:
+    agent.set_env("PROVISION_TYPE", original_environment['PROVISION_TYPE'])
