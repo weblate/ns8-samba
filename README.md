@@ -29,9 +29,9 @@ with the specific `add-internal-provider` action:
 
 ## Provision
 
-Provision a new domain:
+For example, to provision a new domain:
 
-    api-cli run configure-module --agent module/samba1 --data - <<EOF
+    api-cli run module/samba1/configure-module --data - <<EOF
     {
         "provision":"new-domain",
         "adminuser":"administrator",
@@ -46,7 +46,7 @@ Provision a new domain:
 Further Samba instances for the same `realm` can be **joined** to the existing domain.
 The command is similar.
 
-    api-cli run configure-module --agent module/samba2 --data - <<EOF
+    api-cli run module/samba2/configure-module --data - <<EOF
     {
         "provision":"join-domain",
         "adminuser":"administrator",
@@ -63,15 +63,41 @@ In multiple DCs domains, DCs must connect each other to join the domain
 and for data replication. If a DC cannot contact other DCs the provision
 procedure fails.
 
-For this reason the DC IP is reachable from other nodes of the cluster
-through the cluster VPN.
+For this reason, if the IP of some domain controller is not in the
+routable networks of other nodes, then it is automatically configured to
+be routed through the cluster VPN. This typically happens if domain
+controllers reside in different networks.
+
+Check the IP addresses of domain controllers are routed through the VPN
+with the following commands:
+
+    wg
+    ip route
+
+The following command applies the necessary changes to the system routing
+table and to the Wireguard runtime configuration. It is automatically
+executed at system startup and when the VPN configuration changes, so
+manual execution should not be needed:
+
+    apply-vpn-routes
+
+See also the [Core VPN documentation](https://nethserver.github.io/ns8-core/core/vpn/#vpn).
 
 ## Create a new user account
 
-To create a new user, just execute:
-```
-podman exec -ti samba1 samba-tool user create goofy Nethesis,1234 --given-name=Goofy --surname=Goof --mail=goofy@mail.org
-```
+Create a new user and assign it to the `developers` group
+
+  api-cli run module/samba1/add-user --data - <<EOF
+  {
+      "user": "alice",
+      "display_name": "Alice Jordan",
+      "password": "secret",
+      "locked": false,
+      "groups": [
+          "developers"
+      ]
+  }
+  EOF
 
 ## File server
 
@@ -98,22 +124,21 @@ directories with domain credentials (guest access does not work at all).
 
 The module backup contains shared folders, home dirs and DC state.
 
-The restore procedure enforces some validation rules end exits early if
-they are not satisfied:
-
--  the AD domain must not already exist: the restored DC must be the first
-   of the cluster for that AD domain
--  there must be a network interface with the original backup IP address
-
-To workaround the module checks and limitations, assign the original IP
-address to a network interface with a command like:
-
-    ip addr add 192.168.122.217/24 dev eth1
-
-Then use `set-ipaddress` action to change the DC IP address. Network
-clients must be reconfigured to find the AD DNS server! For instance:
+For a single DC domain, run the restore on a system with the original DC
+IP address. If this is not the case, the restore procedure configures the
+restored DC with the node VPN IP address. Then use `set-ipaddress` action
+to change the DC IP address. Network clients must be reconfigured to find
+the AD DNS server! For instance:
 
     api-cli run module/samba1/set-ipaddress --data '{"ipaddress": "10.15.21.100"}'
+
+In a domain with multiple domain controllers, DC state is replicated. In
+case of a node failure it is not necessary to restore from backup unless
+the failing node is also a file server. In this case the restore procedure
+only extracts the contents of home directories and shared folders from the
+backup set. When the procedure completes, go to the ``Domain and users``
+page and resume the configuration of the DC: it must be joined to the
+domain as a new DC.
 
 ## Migration notes
 
