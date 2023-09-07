@@ -8,7 +8,6 @@
 import sys
 import json
 import agent
-import ipaddress
 
 request = json.load(sys.stdin)
 
@@ -24,9 +23,3 @@ for evar in [
         'SVCPASS',
     ]:
     agent.set_env(evar, ienv[evar])
-
-with agent.redis_connect() as rdb:
-    cluster_network = ipaddress.ip_network(rdb.get('cluster/network'))
-if ipaddress.ip_address(ienv['IPADDRESS']) in cluster_network:
-    # Required by Samba to bind interfaces without broadcast address:
-    agent.set_env('PREFIXLEN', str(cluster_network.prefixlen))
