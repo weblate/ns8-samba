@@ -19,31 +19,31 @@ LEADER_NODE="${1:?missing LEADER_NODE argument}"
 IMAGE_URL="${2:?missing IMAGE_URL argument}"
 shift 2
 
-rfimage="ghcr.io/marketsquare/robotframework-browser/rfbrowser-stable:16.0.5"
-site_packages=$(podman run --network=none --rm "${rfimage}" python3 -msite --user-site)
-ssh_pwuser_key=/home/pwuser/tests/.ssh_privkey
-test_name="$(basename $PWD)"
+ssh_key="$(< $SSH_KEYFILE)"
 
-trap 'set +e ; rm -f tests/.ssh_privkey ; podman cp rfbrowser:/home/pwuser/outputs tests/ ; podman rm rfbrowser || :' EXIT
-cp -p "${SSH_KEYFILE}" tests/.ssh_privkey
+cleanup() {
+    set +e
+    podman cp rf-core-runner:/home/pwuser/outputs tests/
+    podman stop rf-core-runner
+    podman rm rf-core-runner
+}
 
-tar -c tests/ | podman run \
-    --init \
-    --interactive \
-    --name=rfbrowser \
+trap cleanup EXIT
+podman run -i \
     --network=host \
-    --volume=site-packages:${site_packages:?}:z \
-    "${rfimage}" \
-    bash -c "
-        set -e
-        cd ~
-        mkdir -p outputs
-        tar -x -f -
-        pip3 install -q -r tests/pythonreq.txt
-        exec robot -v NODE_ADDR:${LEADER_NODE} -v IMAGE_URL:${IMAGE_URL} -v SSH_KEYFILE:${ssh_pwuser_key} \
-            --name \"${test_name}\" \
-            --skiponfailure unstable \
-            -d outputs/ \
-            \"\${@}\" \
-            tests/
-        " -- "${@}"
+    -v .:/home/pwuser/ns8-module:z \
+    --volume=site-packages:/home/pwuser/.local/lib/python3.8/site-packages:Z \
+    --name rf-core-runner ghcr.io/marketsquare/robotframework-browser/rfbrowser-stable:17.5.2 \
+    bash -l -s <<EOF
+set -e
+echo "$ssh_key" > /home/pwuser/ns8-key
+pip install -q -r /home/pwuser/ns8-module/tests/pythonreq.txt
+mkdir ~/outputs
+cd /home/pwuser/ns8-module
+exec robot -v NODE_ADDR:${LEADER_NODE} \
+    -v IMAGE_URL:${IMAGE_URL} \
+    -v SSH_KEYFILE:/home/pwuser/ns8-key \
+    --name samba \
+    --skiponfailure unstable \
+    -d ~/outputs ${@} /home/pwuser/ns8-module/tests/
+EOF
