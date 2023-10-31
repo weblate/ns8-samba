@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import json
+import sys
+import os
+import agent
+import subprocess
+import hashlib
+
+from agent.ldapproxy import Ldapproxy
+from agent.ldapclient import Ldapclient
+
+request = json.load(sys.stdin)
+
+odomain = Ldapproxy().get_domain(os.environ["REALM"].lower())
+
+oldapcli = Ldapclient.factory(**odomain)
+
+try:
+    ouser = oldapcli.get_user_entry(os.environ["JWT_ID"])
+except agent.ldapclient.exceptions.LdapclientEntryNotFound:
+    json.dump({"status": "failure", "message": "user_not_found"}, fp=sys.stdout)
+    sys.exit(0)
+
+oldapcli.ldapconn.unbind() # close LDAP connection FD
+
+# Unique and impredictable cache file name:
+cache_file = "/tmp/login_" + hashlib.sha256(("change-password-" + os.environ["JWT_ID"] + request['current_password']).encode()).hexdigest()
+
+proc_kpasswd = subprocess.run(["podman", "exec", "-e", "KRB5CCNAME=" + cache_file, "-i", "samba-dc", "kpasswd", os.environ["JWT_ID"]],
+    input=request["current_password"] + "\n" + request["new_password"] + "\n"  + request["new_password"] + "\n",
+    text=True, capture_output=True)
+
+if proc_kpasswd.returncode == 0:
+    json.dump({"status": "success", "message": "password_changed"}, fp=sys.stdout)
+else:
+    # Combined output
+    kmessage = proc_kpasswd.stdout + proc_kpasswd.stderr
+
+    if 'Preauthentication failed' in kmessage:
+        emessage = "error_invalid_credentials"
+    elif 'complexity requirements' in kmessage:
+        emessage = "error_password_complexity"
+    elif 'too short' in kmessage:
+        emessage = "error_password_length"
+    elif 'already in password history' in kmessage:
+        emessage = "error_password_history"
+    elif 'minimum password age' in kmessage:
+        emessage = "error_password_minimum_age"
+    else:
+        emessage = "error_unknown"
+        # Log the combined output: it might contain troubleshoot information!
+        print("kpasswd:", kmessage, file=sys.stderr)
+
+    json.dump({"status": "failure", "message": emessage}, fp=sys.stdout)
