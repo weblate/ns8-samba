@@ -6,6 +6,7 @@ images=()
 repobase="${REPOBASE:-ghcr.io/nethserver}"
 reponame="ubuntu-samba"
 ubuntu_tag=23.04
+user_manager_version=v0.2.1
 
 container="ubuntu-working-container"
 # Prepare a local Ubuntu-based samba image
@@ -69,6 +70,9 @@ if ! buildah containers --format "{{.ContainerName}}" | grep -q nodebuilder-samb
     buildah from --name nodebuilder-samba -v "${PWD}:/usr/src:Z" docker.io/library/node:lts
 fi
 
+echo "Downloading user manager ${user_manager_version} UI..."
+curl -f -O -L https://github.com/NethServer/ns8-user-manager/releases/download/${user_manager_version}/ns8-user-manager-${user_manager_version}.tar.gz
+
 echo "Build static UI files with node..."
 buildah run \
     --workingdir=/usr/src/ui \
@@ -77,6 +81,7 @@ buildah run \
     sh -c "yarn install && yarn build"
 
 buildah add "${container}" imageroot /imageroot
+buildah add "${container}" ns8-user-manager-${user_manager_version}.tar.gz /imageroot/api-moduled/public
 buildah add "${container}" ui/dist /ui
 buildah config \
     --label "org.nethserver.images=ghcr.io/nethserver/samba-dc:${IMAGETAG:-latest}" \
