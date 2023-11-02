@@ -1,5 +1,6 @@
 *** Settings ***
 Library     SSHLibrary
+Library     DateTime
 Resource    api.resource
 Variables  vars.py
 
@@ -10,6 +11,7 @@ ${MID1}    unknown00
 ${DOMSUFFIX}    dc\=x,dc\=y
 ${DOMAIN}    dom.test
 ${SURL}    ldap://
+${JOURNAL_SINCE}    0
 
 *** Keywords ***
 Create a module instance
@@ -48,3 +50,10 @@ Start the client tool container
 Stop the client tool container
     Execute Command    podman kill ldapclient
 
+Save the journal begin timestamp
+    ${tsnow} =    Get Current Date    result_format=epoch
+    Set Global Variable    ${JOURNAL_SINCE}    ${tsnow}
+
+Collect the suite journal
+    Execute Command    journalctl -S @${JOURNAL_SINCE} >journal-dump.log
+    SSHLibrary.Get File    journal-dump.log    ${OUTPUT DIR}/journal-${SUITE NAME}.log
