@@ -22,16 +22,6 @@
         "build-images.sh"
       ],
       "matchStrings": [
-        "^ubuntu_tag=(?<currentValue>[^\\s]+)"
-      ],
-      "depNameTemplate": "ubuntu",
-      "datasourceTemplate": "docker"
-    },
-    {
-      "fileMatch": [
-        "build-images.sh"
-      ],
-      "matchStrings": [
         "\\bdocker\\.io/(?<depName>.+):(?<currentValue>[-0-9\\.a-z]+)"
       ],
       "datasourceTemplate": "docker"
@@ -45,14 +35,6 @@
       ],
       "depNameTemplate": "NethServer/ns8-user-manager",
       "datasourceTemplate": "github-releases"
-    }
-  ],
-  "packageRules": [
-    {
-      "matchPackageNames": [
-        "node"
-      ],
-      "allowedVersions": "<= 18"
     }
   ]
 }

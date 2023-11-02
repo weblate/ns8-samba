@@ -5,13 +5,12 @@ images=()
 
 repobase="${REPOBASE:-ghcr.io/nethserver}"
 reponame="ubuntu-samba"
-ubuntu_tag=23.04
 user_manager_version=v0.3.0
 
 container="ubuntu-working-container"
 # Prepare a local Ubuntu-based samba image
 if ! buildah inspect --type container "${container}" &>/dev/null; then
-    container=$(buildah from --name "${container}" docker.io/library/ubuntu:${ubuntu_tag})
+    container=$(buildah from --name "${container}" docker.io/library/ubuntu:23.04)
     buildah run "${container}" -- bash <<'EOF'
 set -e
 apt-get update
@@ -27,7 +26,7 @@ fi
 #
 container=$(buildah from "${repobase}/${reponame}")
 reponame="samba-dc"
-buildah run "${container}" -- mv -v /etc/samba/smb.conf /etc/samba/smb.conf.${ubuntu_tag}
+buildah run "${container}" -- mv -v /etc/samba/smb.conf /etc/samba/smb.conf.distro
 buildah add "${container}" samba-dc/ /
 buildah config \
     --env=SAMBA_LOGLEVEL="1 auth_audit:3" \
@@ -67,7 +66,7 @@ reponame="samba"
 # Reuse existing nodebuilder-samba container, to speed up builds
 if ! buildah containers --format "{{.ContainerName}}" | grep -q nodebuilder-samba; then
     echo "Pulling NodeJS runtime..."
-    buildah from --name nodebuilder-samba -v "${PWD}:/usr/src:Z" docker.io/library/node:lts
+    buildah from --name nodebuilder-samba -v "${PWD}:/usr/src:Z" docker.io/library/node:21.1.0-slim
 fi
 
 echo "Downloading user manager ${user_manager_version} UI..."
