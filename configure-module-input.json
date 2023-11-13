@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","title":"set-ipaddress input","$id":"http://schema.nethserver.org/samba/configure-module-input.json","description":"Change the DC IP address","examples":[{"ipaddress":"10.15.21.100"}],"type":"object","required":["ipaddress"],"properties":{"ipaddress":{"type":"string","format":"ipv4"}}}
