@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2022 Nethesis S.r.l.
+# http://www.nethesis.it - nethserver@nethesis.it
+#
+# This script is part of NethServer.
+#
+# NethServer is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License,
+# or any later version.
+#
+# NethServer is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with NethServer.  If not, see COPYING.
+#
+
+import agent
+import json
+import sys
+import subprocess
+import os
+import base64
+
+request = json.load(sys.stdin)
+group = request['group']
+
+sambatool_cmd = ['podman', 'exec', 'samba-dc', 'samba-tool']
+
+if 'users' in request:
+    new_members = set(request['users'])
+    getmembers_cmd = sambatool_cmd + ['group', 'listmembers', group]
+    with subprocess.Popen(getmembers_cmd, stdout=subprocess.PIPE, text=True) as proc:
+        old_members = set(proc.stdout.read().strip().split("\n"))
+
+    add_members = new_members - old_members
+    if add_members:
+        subprocess.run(sambatool_cmd + ['group', "addmembers", group, ','.join(add_members)], stdout=sys.stderr, check=True, text=True)
+
+    rem_members = old_members - new_members
+    if rem_members:
+        subprocess.run(sambatool_cmd + ['group', "removemembers", group, ','.join(rem_members)], stdout=sys.stderr, check=True, text=True)
+
+if 'description' in request:
+    # get description
+    description = request['description']
+    
+    # convert to base64 string
+    encoded_description = base64.b64encode(description.encode("utf-8")).decode("utf-8")
+    
+    # search for dn: string
+    dn_cmd = ['podman', 'exec', '-i', 'samba-dc', 'samba-tool', 'group', 'show', group]
+    dn_out = subprocess.run(dn_cmd, stdout=subprocess.PIPE, check=True, text=True)
+    dn_line = ""
+    for line in dn_out.stdout.split("\n"):
+        if line.startswith("dn: "):
+            dn_line = line
+    
+    # compose ldbmodify payload
+    description_lines = f'''{dn_line}
+changetype: modify
+replace: description
+description:: {encoded_description}'''
+
+    # create and exec command
+    setname_cmd = ['podman', 'exec', '-i', 'samba-dc',
+                   'ldbmodify', '-H', '/var/lib/samba/private/sam.ldb']
+    subprocess.run(setname_cmd, input=description_lines, stdout=sys.stderr, check=True, text=True)
+
+json.dump({"status": "success", "message": "group_altered"}, fp=sys.stdout)

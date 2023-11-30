@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2022 Nethesis S.r.l.
+# http://www.nethesis.it - nethserver@nethesis.it
+#
+# This script is part of NethServer.
+#
+# NethServer is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License,
+# or any later version.
+#
+# NethServer is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with NethServer.  If not, see COPYING.
+#
+
+import agent
+import json
+import sys
+import subprocess
+import os
+
+request = json.load(sys.stdin)
+user = request['user']
+
+sambatool_cmd = ['podman', 'exec', '-i', 'samba-dc', 'samba-tool']
+
+if 'password' in request:
+    password = request['password']
+    inputdata = password + "\n" + password + "\n"
+    setpassword_cmd = sambatool_cmd + ['user', 'setpassword', user]
+    subprocess.run(setpassword_cmd, input=inputdata,
+                   stdout=sys.stderr, check=True, text=True)
+
+if 'locked' in request:
+    if request['locked'] == True:
+        setenabled_cmd = sambatool_cmd + ['user', 'disable', user]
+    else:
+        setenabled_cmd = sambatool_cmd + ['user', 'enable', user]
+
+    subprocess.run(setenabled_cmd, stdout=sys.stderr, check=True, text=True)
+
+if 'groups' in request:
+    # calculate differences between old and new group sets,
+    # then iterate over each group to add/remove the user from it.
+
+    new_groups = set(request['groups'])
+    getgroups_cmd = sambatool_cmd + ['user', 'getgroups', user]
+    with subprocess.Popen(getgroups_cmd, stdout=subprocess.PIPE, text=True) as proc:
+        old_groups = set(proc.stdout.read().strip().split("\n"))
+
+    old_groups -= {'Domain Users'}  # this group is always set, ignore it!
+
+    add_groups = new_groups - old_groups
+    for group in add_groups:
+        subprocess.run(sambatool_cmd + ['group', "addmembers",
+                       group, user], stdout=sys.stderr, check=True, text=True)
+
+    rem_groups = old_groups - new_groups
+    for group in rem_groups:
+        subprocess.run(sambatool_cmd + ['group', "removemembers",
+                       group, user], stdout=sys.stderr, check=True, text=True)
+
+if 'display_name' in request:
+    display_name = request['display_name']
+    setname_cmd = ['podman', 'exec', '-i', 'samba-dc',
+                   'pdbedit', '-u', user, f'--fullname={display_name}']
+    subprocess.run(setname_cmd, stdout=sys.stderr, check=True, text=True)
+
+json.dump({"status": "success", "message": "user_altered"}, fp=sys.stdout)
