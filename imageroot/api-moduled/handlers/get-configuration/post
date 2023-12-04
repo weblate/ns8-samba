@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import json
+import re
+import subprocess
+import sys
+
+# PASSWORD POLICY
+result = subprocess.run(['podman', 'exec', 'samba-dc', 'samba-tool', 'domain', 'passwordsettings', 'show'],
+                        check=True, capture_output=True, text=True)
+
+password_settings = {
+    'expiration': {
+        'max_age': int(re.search(r'Maximum password age \(days\): (\d.*)\n', result.stdout).group(1)),
+        'min_age': int(re.search(r'Minimum password age \(days\): (\d.*)\n', result.stdout).group(1))
+    },
+    'strength': {
+        'history_length': int(re.search(r'Password history length: (\d.*)\n', result.stdout).group(1)),
+        'password_min_length': int(re.search(r'Minimum password length: (\d.*)\n', result.stdout).group(1)),
+        'complexity_check': re.search(r'Password complexity: (.*)\n', result.stdout).group(1) == 'on'
+    }
+}
+
+password_settings['expiration']['enforced'] = password_settings['expiration']['max_age'] > 0 or \
+    password_settings['expiration']['min_age'] > 0
+password_settings['strength']['enforced'] = password_settings['strength']['history_length'] > 0 or \
+    password_settings['strength']['password_min_length'] > 0 or \
+    password_settings['strength']['complexity_check']
+
+if not password_settings['expiration']['enforced']:
+    password_settings['expiration']['max_age'] = 180
+    password_settings['expiration']['min_age'] = 0
+
+if not password_settings['strength']['enforced']:
+    password_settings['strength']['history_length'] = 24
+    password_settings['strength']['password_min_length'] = 8
+    password_settings['strength']['complexity_check'] = True
+
+# END PASSWORD POLICY
+
+config = {
+    'password_settings': password_settings
+}
+json.dump({"status": "success", "message": "configuration_listed",
+          "config": config}, fp=sys.stdout)
