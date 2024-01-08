@@ -47,6 +47,9 @@ if proc_kinit.returncode != 0:
     else:
         sys.exit(3) # Login failed
 
+if "Domain Admins" not in oclaims["groups"]:
+    oclaims["scope"] = ["change-password"]
+
 # Clean up the cache file after a successful login:
 subprocess.run(["podman", "exec", "samba-dc", "rm", "-f", cache_file], text=True, capture_output=True)
 
