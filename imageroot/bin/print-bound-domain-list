@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import sys
+import json
+import agent
+import agent.tasks
+import os
+import json
+
+
+agent_install_dir = os.environ['AGENT_INSTALL_DIR']
+# realm is mandatory we do not need to test it
+realm = os.environ["REALM"].lower()
+
+# Connect to redis and iterate over the keys, values of cluster/module_domains
+with agent.redis_connect(use_replica=True) as rdb:
+    modules_set = set()
+    for key, value in rdb.hscan_iter("cluster/module_domains"):
+        # Iterate over the value and push each keys into modules_set
+        for element in value.split():
+            if element.lower() == realm:
+                modules_set.add(key)
+# Write modules set to a JSON file
+data = {"domain": realm,"services": list(modules_set)}
+
+with open(f'{agent_install_dir}/api-moduled/public/config.json', 'w') as file:
+    json.dump(data, file)
