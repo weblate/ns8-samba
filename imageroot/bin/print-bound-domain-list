@@ -15,6 +15,8 @@ import json
 agent_install_dir = os.environ['AGENT_INSTALL_DIR']
 # realm is mandatory we do not need to test it
 realm = os.environ["REALM"].lower()
+# Get the list of modules from the cluster
+response = agent.tasks.run(agent_id='cluster', action='list-modules', data=None)
 
 # Connect to redis and iterate over the keys, values of cluster/module_domains
 with agent.redis_connect(use_replica=True) as rdb:
@@ -23,9 +25,13 @@ with agent.redis_connect(use_replica=True) as rdb:
         # Iterate over the value and push each keys into modules_set
         for element in value.split():
             if element.lower() == realm:
-                modules_set.add(key)
+                # Parse response['output'] and push to modules_set when the key matches [{name:"key"}]
+                for item in response['output']:
+                    if item.get('name').lower() == key.rstrip('1234567890').lower():
+                        modules_set.add(item.get('name'))
+
 # Write modules set to a JSON file
-data = {"domain": realm,"services": list(modules_set)}
+data = {"domain": realm, "services": list(modules_set)}
 
 with open(f'{agent_install_dir}/api-moduled/public/config.json', 'w') as file:
     json.dump(data, file)
