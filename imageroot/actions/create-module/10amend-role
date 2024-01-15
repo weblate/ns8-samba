@@ -1,0 +1,9 @@
+#!/usr/bin/bash
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# we want to delegate the role list-modules to the accountprovider
+/usr/local/agent/bin/redis-exec SADD "${AGENT_ID}/roles/accountprovider"  "list-modules"
