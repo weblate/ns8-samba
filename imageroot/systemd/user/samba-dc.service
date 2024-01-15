@@ -13,6 +13,7 @@ TimeoutStopSec=70
 SuccessExitStatus=143
 ExecStartPre=/bin/rm -f %t/%N.pid %t/%N.cid
 ExecStartPre=runagent bash -c "(echo -n DNS_FORWARDER= ; print-nameservers) > dns_forwarder.env"
+ExecStartPre=runagent print-bound-domain-list
 ExecStart=/usr/bin/podman run \
     --dns=none \
     --no-hosts \
