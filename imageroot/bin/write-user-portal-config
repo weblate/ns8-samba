@@ -11,33 +11,30 @@ import agent.tasks
 import os
 import json
 
-def get_matching_names(name_set, modules_set):
-    return {name for name in name_set if any(name.lower() in module.lower() for module in modules_set)}
 
 agent_install_dir = os.environ['AGENT_INSTALL_DIR']
 # realm is mandatory we do not need to test it
 realm = os.environ["REALM"].lower()
-# Get the list of modules from the cluster
-response = agent.tasks.run(agent_id='cluster', action='list-modules', data=None)
 
-# Parse response['output'] and push to modules_set the name of each module
-names_set=set()
-for item in response['output']:
-    names_set.add(item.get('name'))
-
-# Connect to redis and iterate over the keys, values of cluster/module_domains
+# Get the list of modules that have the realm in the list of modules
 with agent.redis_connect(use_replica=True) as rdb:
     modules_set = set()
     for key, value in rdb.hscan_iter("cluster/module_domains"):
         # Iterate over the value and push each keys into modules_set
         for element in value.split():
             if element.lower() == realm:
-                modules_set.add(key)
+                # remove string numbers from the key sogo1 -> sogo
+                modules_set.add(key.rstrip('0123456789'))
 
-matching_names = get_matching_names(names_set, modules_set)
+# Parse the response and compare the id with the modules_set
+response = agent.tasks.run(agent_id='cluster', action='list-modules', data=None)
+names_set=set()
+for item in response['output']:
+    if item.get('id') in modules_set:
+        names_set.add(item.get('name'))
 
 # Write modules set to a JSON file
-data = {"domain": realm, "services": list(matching_names)}
+data = {"domain": realm, "services": list(names_set)}
 
 with open(f'{agent_install_dir}/api-moduled/public/config.json', 'w') as file:
     json.dump(data, file)
