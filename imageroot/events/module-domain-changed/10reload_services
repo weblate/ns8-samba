@@ -15,4 +15,4 @@ event = json.load(sys.stdin)
 if not os.environ["REALM"].lower() in [domain.lower() for domain in event["domains"]]:
     sys.exit(0)
 
-agent.run_helper('systemctl', '--user', 'try-reload-or-restart', 'samba-dc.service').check_returncode()
+agent.run_helper('systemctl', '--user', 'try-reload-or-restart', 'api-moduled.service').check_returncode()
