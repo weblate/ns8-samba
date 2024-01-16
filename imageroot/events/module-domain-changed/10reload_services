@@ -12,7 +12,8 @@ import agent
 
 
 event = json.load(sys.stdin)
-if not os.environ["REALM"].lower() in [domain.lower() for domain in event["domains"]]:
+domain = os.environ["REALM"].lower()
+if not domain in event["domains"]:
     sys.exit(0)
 
-agent.run_helper('systemctl', '--user', 'try-reload-or-restart', 'api-moduled.service').check_returncode()
+agent.run_helper('write-user-portal-config')
