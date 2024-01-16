@@ -16,17 +16,17 @@ agent_install_dir = os.environ['AGENT_INSTALL_DIR']
 # realm is mandatory we do not need to test it
 realm = os.environ["REALM"].lower()
 
-# Get the list of modules that have the realm in the list of modules
 with agent.redis_connect(use_replica=True) as rdb:
     modules_set = set()
+    # Generate the set of image ids of modules bound to us (Samba domain)
     for key, value in rdb.hscan_iter("cluster/module_domains"):
         # Iterate over the value and push each keys into modules_set
-        for element in value.split():
-            if element.lower() == realm:
+        # check if our realm matches
+        if realm in value.split():
                 # remove string numbers from the key sogo1 -> sogo
                 modules_set.add(key.rstrip('0123456789'))
 
-# Parse the response and compare the id with the modules_set
+# Translate the image identifiers in module_set into human readable strings
 response = agent.tasks.run(agent_id='cluster', action='list-modules', data=None)
 names_set=set()
 for item in response['output']:
