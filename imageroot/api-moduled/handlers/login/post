@@ -43,12 +43,12 @@ if proc_kinit.returncode != 0:
     if "Password expired.  You must change it now." in proc_kinit.stdout:
         # Password must be changed immediately: return a token limited to
         # password changing:
-        oclaims["scope"] = ["change-password"]
+        oclaims["scope"] = ["change-password", "get-password-policy"]
     else:
         sys.exit(3) # Login failed
 
 if "Domain Admins" not in oclaims["groups"]:
-    oclaims["scope"] = ["change-password"]
+    oclaims["scope"] = ["change-password", "get-password-policy"]
 
 # Clean up the cache file after a successful login:
 subprocess.run(["podman", "exec", "samba-dc", "rm", "-f", cache_file], text=True, capture_output=True)
