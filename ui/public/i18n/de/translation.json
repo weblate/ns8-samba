@@ -1,8 +1,10 @@
 {
     "common": {
-        "required": "Required",
+        "required": "erforderlich",
         "work_in_progress": "Work in progress",
-        "processing": "Processing..."
+        "processing": "Processing...",
+        "save": "speichern",
+        "close": "Schließen"
     },
     "error": {
         "403": "Operation not authorized",
