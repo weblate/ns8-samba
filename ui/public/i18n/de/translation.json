@@ -32,7 +32,10 @@
         "title": "Status",
         "installation_node": "Installation node",
         "node": "Knoten",
-        "no_volumes": "No volumes"
+        "no_volumes": "No volumes",
+        "general": "Allgemein",
+        "domain": "Domäne 1",
+        "go_to_domains_and_users": "Zu Domänen und Benutzer wechseln"
     },
     "about": {
         "title": "About"
@@ -45,9 +48,15 @@
         "get-status": "Get status",
         "configure-module": "Configure module",
         "get-configuration": "Get configuration",
-        "get-name": "Get name"
+        "get-name": "Get name",
+        "list-domain-groups": "Domänen-Gruppen auflisten"
     },
     "task": {
         "cannot_create_task": "Cannot create task {action}"
+    },
+    "shares": {
+        "configure_instance": "{instance} konfigurieren",
+        "name": "Name",
+        "description": "Beschreibung"
     }
 }
