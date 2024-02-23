@@ -31,7 +31,7 @@
         "mount": "Mount",
         "title": "Status",
         "installation_node": "Installation node",
-        "node": "Node",
+        "node": "Knoten",
         "no_volumes": "No volumes"
     },
     "about": {
