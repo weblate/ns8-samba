@@ -15,6 +15,7 @@ import json
 agent_install_dir = os.environ['AGENT_INSTALL_DIR']
 # realm is mandatory we do not need to test it
 realm = os.environ["REALM"].lower()
+module_id = os.environ["MODULE_ID"]
 
 with agent.redis_connect(use_replica=True) as rdb:
     modules_set = set()
@@ -35,6 +36,13 @@ try:
             names_set.add(item.get('name'))
 except Exception as ex:
     print(agent.SD_WARNING + "Failed to run cluster/list-modules action:", ex, file=sys.stderr)
+
+# A Domain Controller acting as File Server provides additional services
+# by itself. Let's tell the user about it:
+has_file_server_flag = bool(rdb.sismember(f'module/{module_id}/flags', 'file_server'))
+if has_file_server_flag:
+    names_set.add("Windows authentication")
+    names_set.add("Network shared folders")
 
 # Write modules set to a JSON file
 data = {"domain": realm, "services": list(names_set)}
