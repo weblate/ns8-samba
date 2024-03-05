@@ -23,7 +23,9 @@
         "mount": "Percorso di mount",
         "general": "Generale",
         "domain": "Dominio",
-        "go_to_domains_and_users": "Andare su Domini e utenti"
+        "go_to_domains_and_users": "Andare su Domini e utenti",
+        "shared_folders": "Cartelle Condivise",
+        "go_to_shared_folders": "Vai a cartelle condivise"
     },
     "settings": {
         "save": "Salva",
@@ -52,7 +54,12 @@
         "list-backup-repositories": "Elenca repository di backup",
         "list-backups": "Elenca backup",
         "list-installed-modules": "Elenca moduli installati",
-        "list-domain-groups": "Elenco dei gruppi di dominio"
+        "list-domain-groups": "Elenco dei gruppi di dominio",
+        "list-shares": "Elenca condivisioni",
+        "add-share": "Crea cartella condivisa",
+        "alter-share": "Modifica descrizione",
+        "remove-share": "Eliminare la cartella condivisa",
+        "reset-share-acls": "Impostare autorizzazioni cartella condivisa"
     },
     "task": {
         "cannot_create_task": "Impossibile eseguire task {action}"
@@ -63,6 +70,36 @@
     "shares": {
         "configure_instance": "Configura {instance}",
         "name": "Nome",
-        "description": "Descrizione"
+        "description": "Descrizione",
+        "set_shared_folder_permissions_explanation": "Stai per impostare nuove autorizzazioni su <strong>tutti i file e le sottodirectory</strong> della cartella condivisa <strong>{name}</strong>. Questo potrebbe richiedere del tempo, a seconda delle dimensioni della cartella condivisa",
+        "create_shared_folder_name": "Crea cartella condivisa {name}",
+        "grw_description": "Il gruppo principale può leggere e scrivere, tutti gli altri non possono né leggere né scrivere",
+        "title": "Cartelle Condivise",
+        "create_shared_folder": "Crea cartella condivisa",
+        "no_shares": "Nessuna cartella condivisa",
+        "share_already_exists": "Esiste già una cartella condivisa con questo nome",
+        "group_not_found": "Gruppo non trovato",
+        "edit_description": "Modifica descrizione",
+        "set_permissions": "Impostare le autorizzazioni",
+        "show_acls": "Mostra ACLs",
+        "edit_shared_folder_description": "Modifica la descrizione della cartella condivisa",
+        "no_description": "Nessuna descrizione",
+        "shared_folder_name_acls": "{name} ACLs",
+        "acl_ro": "Sola lettura",
+        "acl_rw": "Lettura e scrittura",
+        "acl_full": "Accesso completo",
+        "acl_special": "Speciali",
+        "delete_shared_folder_name": "Elimina cartella condivisa {name}",
+        "share_not_found": "Condivisione non trovata",
+        "main_group": "Gruppo principale",
+        "main_group_tooltip": "Il gruppo <strong>Domain Admins</strong> ha sempre il pieno controllo sulla cartella condivisa",
+        "initial_permissions": "Autorizzazioni iniziali",
+        "ergrw_description": "Il gruppo principale può leggere e scrivere, tutti gli altri possono solo leggere",
+        "erw_description": "Tutti possono leggere e scrivere",
+        "set_shared_folder_permissions": "Impostare autorizzazioni cartella condivisa",
+        "permissions": "Permessi",
+        "set_permissions_for_share_name": "Impostare le autorizzazioni per la cartella condivisa {name}",
+        "invalid_permissions": "Permessi non validi",
+        "delete_shared_folder_description": "Elimina cartella condivisa <strong>{name}</strong>? Tutti i file contenuti saranno <strong>permanentemente</strong> cancellati."
     }
 }

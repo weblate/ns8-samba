@@ -20,7 +20,12 @@
         "title": "Status",
         "installation_node": "Installation node",
         "node": "Node",
-        "no_volumes": "No volumes"
+        "no_volumes": "No volumes",
+        "domain": "Domain",
+        "general": "General",
+        "go_to_domains_and_users": "Go to Domains and users",
+        "shared_folders": "Shared folders",
+        "go_to_shared_folders": "Go to Shared folders"
     },
     "error": {
         "403": "Operation not authorized",
@@ -45,12 +50,50 @@
         "get-status": "Get status",
         "configure-module": "Configure module",
         "get-configuration": "Get configuration",
-        "get-name": "Get name"
+        "get-name": "Get name",
+        "alter-share": "Edit description",
+        "list-domain-groups": "List domain groups",
+        "reset-share-acls": "Set shared folder permissions",
+        "list-shares": "List shares",
+        "add-share": "Create shared folder",
+        "remove-share": "Delete shared folder"
     },
     "task": {
         "cannot_create_task": "Cannot create task {action}"
     },
     "shares": {
-        "description": "Azalpena"
+        "description": "Azalpena",
+        "acl_full": "Full access",
+        "edit_description": "Edit description",
+        "set_permissions_for_share_name": "Set permissions for shared folder {name}",
+        "invalid_permissions": "Invalid permissions",
+        "acl_ro": "Read only",
+        "set_shared_folder_permissions_explanation": "You are about to set new permissions on <strong>all files and subdirectories</strong> of shared folder <strong>{name}</strong>. This might take some time, depending on the size of the shared folder",
+        "acl_special": "Special",
+        "no_shares": "No shared folder",
+        "configure_instance": "Configure {instance}",
+        "edit_shared_folder_description": "Edit shared folder description",
+        "set_shared_folder_permissions": "Set shared folder permissions",
+        "delete_shared_folder_name": "Delete shared folder {name}",
+        "name": "Name",
+        "share_already_exists": "A shared folder with this name already exists",
+        "ergrw_description": "Main group can read and write, everyone else can only read",
+        "delete_shared_folder_description": "Delete shared folder <strong>{name}</strong>? All files contained will be <strong>permanently</strong> deleted.",
+        "grw_description": "Main group can read and write, everyone else can neither read nor write",
+        "main_group_tooltip": "<strong>Domain Admins</strong> group always have full control on shared folder",
+        "permissions": "Permissions",
+        "main_group": "Main group",
+        "share_not_found": "Share not found",
+        "group_not_found": "Group not found",
+        "create_shared_folder_name": "Create shared folder {name}",
+        "erw_description": "Everyone can read and write",
+        "show_acls": "Show ACLs",
+        "create_shared_folder": "Create shared folder",
+        "acl_rw": "Read and write",
+        "set_permissions": "Set permissions",
+        "no_description": "No description",
+        "shared_folder_name_acls": "{name} ACLs",
+        "title": "Shared folders",
+        "initial_permissions": "Initial permissions"
     }
 }
