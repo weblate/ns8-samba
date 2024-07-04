@@ -178,7 +178,7 @@ if [[ -n "${share_file}" ]]; then
     samba-tool ntacl set "${sddl_acl_file}" "${share_file}"
     xattr_file=$(dump_xattr "${share_file}")
     # Apply the xattr value to files recursively
-    find "${share_root}" -mindepth 1 -type d -print0 | xargs -0 -r -- setfattr -n user.NTACL -v "${xattr_file}" --
+    find "${share_root}" -mindepth 1 -type f -print0 | xargs -0 -r -- setfattr -n user.NTACL -v "${xattr_file}" --
 fi
 
 # Find just the first subdir element, used to store xattr for
