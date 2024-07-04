@@ -1,10 +1,10 @@
 {
     "common": {
-        "required": "Required",
+        "required": "Beharrezkoa",
         "save": "Save",
         "work_in_progress": "Work in progress",
         "processing": "Processing...",
-        "close": "Itxi"
+        "close": "Close"
     },
     "status": {
         "app_volumes": "App volume | App volumes",
@@ -40,7 +40,7 @@
         "validation_error": "Validation error"
     },
     "about": {
-        "title": "About"
+        "title": "Honi buruz"
     },
     "action": {
         "list-backup-repositories": "List backup repositories",
