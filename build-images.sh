@@ -83,6 +83,7 @@ buildah add "${container}" imageroot /imageroot
 buildah add "${container}" ns8-user-manager-${user_manager_version}.tar.gz /imageroot/api-moduled/public
 buildah add "${container}" ui/dist /ui
 buildah config \
+    --label="org.nethserver.max-per-node=1" \
     --label "org.nethserver.images=ghcr.io/nethserver/samba-dc:${IMAGETAG:-latest}" \
     --label 'org.nethserver.authorizations=node:fwadm ldapproxy@node:accountprovider cluster:accountprovider traefik@node:routeadm' \
     --label="org.nethserver.tcp-ports-demand=1" \
