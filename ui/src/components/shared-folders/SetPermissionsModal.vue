@@ -46,7 +46,7 @@
           ref="group"
         >
           <template slot="tooltip">
-            <div v-html="$t('shares.main_group_tooltip')"></div>
+            <div>{{ $t("shares.main_group_tooltip") }}</div>
           </template>
         </NsComboBox>
         <!-- permissions -->
