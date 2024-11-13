@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2024 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import json
+import sys
+import os
+import subprocess
+import agent
+import hashlib
+
+request = json.load(sys.stdin)
+
+content_basename = os.path.basename(request['content'])
+content_path = os.path.dirname(request['content'])
+destroot = request.get("destroot", "Restored folder")
+
+pre_script = """
+set -e
+share="${1:?share param missing}"
+destroot="${2:?destroot param missing}"
+content_basename="${3:?content_basename param is missing}"
+# SDDL ACL. World read-only permissions. SYstem and Builtin Admins (BA) have full access:
+destroot_acl='O:LAG:DUD:AI(A;OICIID;0x001f01ff;;;SY)(A;OICIID;0x001f01ff;;;BA)(A;OICIID;0x001301bf;;;WD)'
+cd "${SAMBA_SHARES_DIR:?}/${share}"
+if [ ! -e "${destroot}" ]; then
+    mkdir -vp "${destroot}"
+    chmod -c u+rwx,g+srwx,a+rx "${destroot}"
+    chown -c root:users "${destroot}"
+    samba-tool ntacl set "${destroot_acl}" "${destroot}"
+fi
+# Drop any existing content
+rm -rf "${destroot}/${content_basename}"
+"""
+pre_cmd = ['podman', 'exec', '-i', 'samba-dc', 'bash', '-s', request['share'], destroot, content_basename]
+subprocess.run(pre_cmd, input=pre_script, stdout=sys.stderr, text=True).check_returncode()
+
+podman_args = ["--workdir=/srv"] + agent.agent.get_state_volume_args()
+restic_args = [
+    "restore",
+    "--json",
+    f"{request['snapshot']}:volumes/shares/{request['share']}/{content_path}",
+    f"--include={content_basename}",
+    f"--include={content_basename}/**",
+    f"--target=volumes/shares/{request['share']}/{destroot}"
+]
+
+# Prepare progress callback function that captures non-progress messages too:
+last_restic_message = {}
+def build_restore_progress_callback():
+    restore_progress = agent.get_progress_callback(2, 97)
+    def fprog(omessage):
+        global last_restic_message
+        last_restic_message = omessage
+        if omessage['message_type'] == 'status':
+            fpercent = float(omessage['percent_done'])
+            restore_progress(int(fpercent * 100))
+    return fprog
+# Run the restic restore command capturing the progress status:
+prestore = agent.run_restic(agent.redis_connect(), request["destination"], request["repopath"], podman_args, restic_args, progress_callback=build_restore_progress_callback())
+if prestore.returncode != 0:
+    print(agent.SD_ERR + f"Restic restore command failed with exit code {prestore.returncode}.", file=sys.stderr)
+    sys.exit(1)
+
+json.dump({
+    "request": request,
+    "last_restic_message": last_restic_message,
+}, fp=sys.stdout)
