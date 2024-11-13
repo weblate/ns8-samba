@@ -1,0 +1,46 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "seek-snapshot-content output",
+    "$id": "http://schema.nethserver.org/mail/seek-snapshot-content-output.json",
+    "description": "Locate a file or directory in a backup snapshot",
+    "examples": [
+        {
+            "request": {
+                "destination": "14030a59-a4e6-54cc-b8ea-cd5f97fe44c8",
+                "repopath": "mail/4372a5d5-0886-45d3-82e7-68d913716a4c",
+                "snapshot": "latest",
+                "share": "myshare",
+                "query": "*.php",
+                "limit": 100
+            },
+            "contents": [
+                "dir1/file001.php",
+                "dir1/file002.php",
+                "Project/NethServer/Main.php"
+            ],
+            "limit_reached": false
+        }
+    ],
+    "type": "object",
+    "required": [
+        "contents",
+        "limit_reached"
+    ],
+    "properties": {
+        "contents": {
+            "type": "array",
+            "description": "List of absolute share content paths",
+            "items": {
+                "type": "string"
+            }
+        },
+        "limit_reached": {
+            "type": "boolean",
+            "description": "If true, the query matches more contents than the returned items"
+        },
+        "request": {
+            "type": "object",
+            "title": "Original request object"
+        }
+    }
+}
