@@ -70,9 +70,12 @@ list_shares = {
     "shares": []
 }
 
-ocfg = configparser.ConfigParser()
+ocfg = configparser.ConfigParser(delimiters=("="))
 with subprocess.Popen(podman_exec + ["net", "conf", "list"], stdout=subprocess.PIPE, text=True) as hconf:
-    ocfg.read_file(hconf.stdout, 'samba-registry-conf')
+    try:
+        ocfg.read_file(hconf.stdout, 'samba-registry-conf')
+    except Exception as ex:
+        print(agent.SD_ERR + "Share configuration parse error", ex, file=sys.stderr)
 
 psharenames = subprocess.run(podman_exec + ["net", "conf", "listshares"], stdout=subprocess.PIPE, text=True)
 for share_name in filter(None, psharenames.stdout.split("\n")):
