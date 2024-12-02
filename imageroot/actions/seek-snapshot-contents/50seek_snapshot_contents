@@ -63,8 +63,9 @@ if locate_share_content() == 3:
     ]
     agent.run_restic(agent.redis_connect(), request["destination"], request["repopath"], podman_args, restic_args, stdout=sys.stderr).check_returncode()
     # Repeat the search
-    if not limit_reached and locate_share_content() != 0:
-        print(agent.SD_ERR + f"locate-share-content failed with exit code {vproc.returncode}.", file=sys.stderr)
+    locate2_returncode = locate_share_content()
+    if not limit_reached and locate2_returncode != 0:
+        print(agent.SD_ERR + f"locate-share-content failed with exit code {locate2_returncode}.", file=sys.stderr)
         sys.exit(1)
 
 json.dump({
