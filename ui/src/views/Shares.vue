@@ -58,8 +58,8 @@
                     @click="showCreateSharedFolderModal"
                     class="empty-state-button"
                     >{{ $t("shares.create_shared_folder") }}</NsButton
-                  ></template
-                >
+                  >
+                </template>
               </NsEmptyState>
             </cv-tile>
           </cv-column>
@@ -89,6 +89,12 @@
                     <NsMenuItem
                       :icon="Locked20"
                       :label="$t('shares.set_permissions')"
+                    />
+                  </cv-overflow-menu-item>
+                  <cv-overflow-menu-item @click="showRestoreFileModal(share)">
+                    <NsMenuItem
+                      :icon="RecentlyViewed20"
+                      :label="$t('shares.restore_file_or_folder')"
                     />
                   </cv-overflow-menu-item>
                   <cv-overflow-menu-item
@@ -149,6 +155,12 @@
       @hide="hideSetPermissionsModal"
       @permissionsUpdated="onPermissionsUpdated"
     />
+    <!-- restore file modal -->
+    <RestoreFileModal
+      :isShown="isShownRestoreFileModal"
+      :shareName="currentShare ? currentShare.name : ''"
+      @hide="hideRestoreFileModal"
+    />
     <!-- delete share modal -->
     <NsDangerDeleteModal
       :isShown="isShownDeleteShareModal"
@@ -193,6 +205,8 @@ import CreateSharedFolderModal from "@/components/shared-folders/CreateSharedFol
 import EditDescriptionModal from "@/components/shared-folders/EditDescriptionModal.vue";
 import ShowAclsModal from "@/components/shared-folders/ShowAclsModal.vue";
 import SetPermissionsModal from "@/components/shared-folders/SetPermissionsModal.vue";
+import RecentlyViewed20 from "@carbon/icons-vue/es/recently-viewed/20";
+import RestoreFileModal from "@/components/shared-folders/RestoreFileModal.vue";
 
 export default {
   name: "Settings",
@@ -201,6 +215,7 @@ export default {
     EditDescriptionModal,
     ShowAclsModal,
     SetPermissionsModal,
+    RestoreFileModal,
   },
   mixins: [
     TaskService,
@@ -223,8 +238,10 @@ export default {
       isShownEditDescriptionModal: false,
       isShownAclsModal: false,
       isShownSetPermissionsModal: false,
+      isShownRestoreFileModal: false,
       isShownDeleteShareModal: false,
       currentShare: null,
+      RecentlyViewed20,
       loading: {
         listShares: false,
         removeShare: false,
@@ -330,6 +347,13 @@ export default {
     },
     hideSetPermissionsModal() {
       this.isShownSetPermissionsModal = false;
+    },
+    showRestoreFileModal(share) {
+      this.currentShare = share;
+      this.isShownRestoreFileModal = true;
+    },
+    hideRestoreFileModal() {
+      this.isShownRestoreFileModal = false;
     },
     onPermissionsUpdated() {
       this.listShares();
