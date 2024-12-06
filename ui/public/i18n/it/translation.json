@@ -4,7 +4,10 @@
         "processing": "In elaborazione…",
         "work_in_progress": "In lavorazione",
         "save": "Salva",
-        "close": "Chiudi"
+        "close": "Chiudi",
+        "next": "Prossimo",
+        "cancel": "Annulla",
+        "previous": "Precedente"
     },
     "status": {
         "node": "Nodo",
@@ -53,7 +56,10 @@
         "add-share": "Crea cartella condivisa",
         "alter-share": "Modifica descrizione",
         "remove-share": "Eliminare la cartella condivisa",
-        "reset-share-acls": "Impostare autorizzazioni cartella condivisa"
+        "reset-share-acls": "Impostare autorizzazioni cartella condivisa",
+        "restore-backup-content": "Ripristino file o cartella",
+        "read-backup-snapshots": "Lettura degli snapshot di backup",
+        "seek-snapshot-contents": "Cerca i file corrispondenti"
     },
     "task": {
         "cannot_create_task": "Impossibile eseguire il task {action}"
@@ -65,7 +71,7 @@
         "configure_instance": "Configura {instance}",
         "name": "Nome",
         "description": "Descrizione",
-        "set_shared_folder_permissions_explanation": "Stai per impostare nuove autorizzazioni su <strong>tutti i file e le sottodirectory</strong> della cartella condivisa <strong>{name}</strong>. Questo potrebbe richiedere del tempo, a seconda delle dimensioni della cartella condivisa",
+        "set_shared_folder_permissions_explanation": "Stai per impostare nuovi permessi su tutti i file e le sottodirectory della cartella condivisa '{name}'. Potrebbe volerci un po' di tempo, a seconda delle dimensioni della cartella condivisa",
         "create_shared_folder_name": "Crea cartella condivisa {name}",
         "grw_description": "Il gruppo principale può leggere e scrivere, tutti gli altri non possono né leggere né scrivere",
         "title": "Cartelle Condivise",
@@ -86,7 +92,7 @@
         "delete_shared_folder_name": "Elimina cartella condivisa {name}",
         "share_not_found": "Condivisione non trovata",
         "main_group": "Gruppo principale",
-        "main_group_tooltip": "Il gruppo <strong>Domain Admins</strong> ha sempre il pieno controllo sulla cartella condivisa",
+        "main_group_tooltip": "Il gruppo \"Domain Admins\" ha sempre il controllo completo sulla cartella condivisa",
         "initial_permissions": "Autorizzazioni iniziali",
         "ergrw_description": "Il gruppo principale può leggere e scrivere, tutti gli altri possono solo leggere",
         "erw_description": "Tutti possono leggere e scrivere",
@@ -94,6 +100,30 @@
         "permissions": "Permessi",
         "set_permissions_for_share_name": "Impostare le autorizzazioni per la cartella condivisa {name}",
         "invalid_permissions": "Permessi non validi",
-        "delete_shared_folder_description": "Elimina cartella condivisa <strong>{name}</strong>? Tutti i file contenuti saranno <strong>permanentemente</strong> cancellati."
+        "delete_shared_folder_description": "Eliminare la cartella condivisa '{name}'? Tutti i file contenuti verranno eliminati definitivamente.",
+        "restore_file_info": "Il file o la cartella selezionata verranno ripristinati in '{restoredFolder}'. Assicurarsi che ci sia spazio sufficiente su {nodo} per evitare il fallimento del ripristino.",
+        "no_snapshot_to_restore": "Nessuno snapshot da ripristinare",
+        "search_file_or_folder": "Cerca file o cartella",
+        "from_node_name_of_different_cluster": "Dal nodo {name} di un altro cluster",
+        "from_node_name": "Dal nodo {name}",
+        "most_recent": "Più recente",
+        "select_backup_snapshot": "Seleziona lo snapshot del backup",
+        "select_file_or_folder_to_restore": "Seleziona il file o la cartella da ripristinare",
+        "restoring_to_share_name": "Ripristino sulla share '{name}'",
+        "from_node_name_of_this_cluster": "Dal nodo {name} di questo cluster",
+        "from_different_cluster": "Da un altro cluster",
+        "restore": "Ripristino",
+        "from_this_cluster": "Da questo cluster",
+        "restore_file_or_folder": "Ripristina file o cartella",
+        "select_backup_destination": "Selezionare la destinazione del backup",
+        "name_pattern": "I caratteri proibiti sono ></\\:\"|?*",
+        "no_backup_found_description": "Assicurarsi che sia stata configurata una destinazione di backup e che sia stato eseguito il backup per {module}",
+        "no_backup_found": "Nessun backup trovato"
+    },
+    "ns_combo_search_box": {
+        "results_limit_reached": "Continua a digitare per mostrare più opzioni",
+        "clear_search": "Svuota ricerca",
+        "placeholder": "Cerca",
+        "no_results": "Nessun risultato"
     }
 }

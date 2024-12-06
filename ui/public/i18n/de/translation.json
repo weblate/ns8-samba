@@ -4,7 +4,10 @@
         "work_in_progress": "In Bearbeitung",
         "processing": "Verarbeitung läuft...",
         "save": "speichern",
-        "close": "Schließen"
+        "close": "Schließen",
+        "cancel": "Cancel",
+        "next": "Next",
+        "previous": "Previous"
     },
     "error": {
         "403": "Vorgang nicht autorisiert",
@@ -56,7 +59,10 @@
         "remove-share": "lösche freigegebenen Ordner",
         "list-shares": "freigegebene Ordner auflisten",
         "add-share": "erstelle freigegebenen Ordner",
-        "reset-share-acls": "Berechtigungen der Ordnerfreigabe festlegen"
+        "reset-share-acls": "Berechtigungen der Ordnerfreigabe festlegen",
+        "restore-backup-content": "Restore file or folder",
+        "read-backup-snapshots": "Read backup snapshots",
+        "seek-snapshot-contents": "Search matching files"
     },
     "task": {
         "cannot_create_task": "Aufgabe {action} kann nicht erstellt werden"
@@ -94,6 +100,30 @@
         "edit_shared_folder_description": "Beschreibung der Ordnerfreigabe ändern",
         "main_group_tooltip": "<strong>Domäen-Admin</strong> Gruppe hat immer Vollzugriff auf die Ordnerfreigabe",
         "initial_permissions": "initiale Berechtigungen",
-        "set_shared_folder_permissions_explanation": "Es werden neue Berechtigungen für <strong> alle Dateien und Unterverzeichnisse</strong> der Ordnerfreigabe <strong>{name}</strong> gesetzt . Dies kann je nach Größe des Ordners einige Zeit in Anspruch nehmen"
+        "set_shared_folder_permissions_explanation": "Es werden neue Berechtigungen für <strong> alle Dateien und Unterverzeichnisse</strong> der Ordnerfreigabe <strong>{name}</strong> gesetzt . Dies kann je nach Größe des Ordners einige Zeit in Anspruch nehmen",
+        "restoring_to_share_name": "Restoring to share '{name}'",
+        "restore_file_info": "The selected file or folder will be restored to '{restoredFolder}'. Ensure there is sufficient space on {node} to avoid restore failure.",
+        "no_snapshot_to_restore": "No snapshot to restore",
+        "search_file_or_folder": "Search file or folder",
+        "from_node_name_of_different_cluster": "From node {name} of a different cluster",
+        "from_node_name": "From node {name}",
+        "most_recent": "Most recent",
+        "select_backup_snapshot": "Select backup snapshot",
+        "select_file_or_folder_to_restore": "Select file or folder to restore",
+        "from_node_name_of_this_cluster": "From node {name} of this cluster",
+        "from_different_cluster": "From a different cluster",
+        "restore": "Restore",
+        "from_this_cluster": "From this cluster",
+        "restore_file_or_folder": "Restore file or folder",
+        "select_backup_destination": "Select backup destination",
+        "name_pattern": "Forbidden characters are ></\\:\"|?*",
+        "no_backup_found_description": "Ensure that a backup destination has been configured and that a backup has been performed for {module}",
+        "no_backup_found": "No backup found"
+    },
+    "ns_combo_search_box": {
+        "placeholder": "Search",
+        "results_limit_reached": "Keep typing to show more options",
+        "clear_search": "Clear search",
+        "no_results": "No results"
     }
 }
