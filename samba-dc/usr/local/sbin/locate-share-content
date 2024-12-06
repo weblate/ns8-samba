@@ -1,0 +1,76 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2024 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+set -e
+set -o pipefail
+
+usage_error ()
+{
+    exec 1>&2
+    [ -n "$1" ] && printf "Error: %s\n" "$1"
+    printf 'Usage: %s -d DATABASEDIR -s SHARE -q QUERY\n' "$0"
+    printf '    OPTIONS\n'
+    printf '      -d DATABASEDIR        base directory of plocate databases\n'
+    printf '      -s SHARE              name of the share to search\n'
+    printf '      -q QUERY              query string to search\n'
+    printf '      -h                    Print this help\n'
+    exit 2
+}
+
+query_regex ()
+{
+    # Ignore non-alphanumeric chars
+    querymod=$(tr -c -d '[:alnum:]' <<<"$1")
+    # Build a wide-match regexp with remaining chars
+    for (( i=0 ; i<${#querymod} ; i++)); do
+        if (( i == 0 )); then
+            echo -n "${querymod:${i}:1}"
+        else
+            echo -n ".*${querymod:${i}:1}"
+        fi
+    done
+    # The resulting regexp is like "q.*u.*e.*r.*y"
+    echo
+}
+
+# Parse command-line arguments
+while getopts "hd:q:s:" optname ; do
+    case ${optname} in
+        q)  query="${OPTARG}" ;;
+        d)  databasedir="${OPTARG}" ;;
+        s)  share="${OPTARG}" ;;
+        h)  usage_error "${@}" ;;
+        *)  usage_error "${@}" ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+[ -z "${databasedir}" ] && usage_error "${@}"
+[ -z "${query+x}" ] && usage_error "${@}"
+
+trap 'rm -f ${basename_results} ${wholename_results} ${regexp_results}' EXIT
+
+database="${databasedir}/${share}.plocate"
+if [ ! -f "${database}" ]; then
+    echo "Missing plocate database file: ${database}" 1>&2
+    exit 3
+fi
+
+basename_results=$(mktemp)
+plocate -i -b -d "${database}" "${query}" >"${basename_results}" &
+
+if [ -n "${query}" ]; then
+    wholename_results=$(mktemp)
+    regexp_results=$(mktemp)
+    plocate -i -w -d "${database}" "${query}" >"${wholename_results}" &
+    plocate -i -r -d "${database}" "$(query_regex "${query}")" >"${regexp_results}" &
+fi
+
+wait
+
+stripprefix="${SAMBA_SHARES_DIR}/${share}/"
+cat "${basename_results}" "${wholename_results:-/dev/null}" "${regexp_results:-/dev/null}" | sed "s|^${stripprefix}||"

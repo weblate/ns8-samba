@@ -36,6 +36,7 @@
         "create_shared_folder": "Create shared folder",
         "no_shares": "No shared folder",
         "name": "Name",
+        "name_pattern": "Forbidden characters are ></\\:\"|?*",
         "description": "Description",
         "create_shared_folder_name": "Create shared folder {name}",
         "share_already_exists": "A shared folder with this name already exists",

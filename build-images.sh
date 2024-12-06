@@ -14,7 +14,7 @@ if ! buildah inspect --type container "${container}" &>/dev/null; then
     buildah run "${container}" -- bash <<'EOF'
 set -e
 apt-get update
-apt-get -y install samba winbind krb5-user iputils-ping bzip2 ldb-tools chrony dnsutils acl smbclient libnss-winbind rsync
+apt-get -y install samba winbind krb5-user iputils-ping bzip2 ldb-tools chrony dnsutils acl smbclient libnss-winbind rsync plocate
 apt-get clean
 find /var/lib/apt/lists/ -type f -delete
 EOF
@@ -84,6 +84,7 @@ buildah add "${container}" ns8-user-manager-${user_manager_version}.tar.gz /imag
 buildah add "${container}" ui/dist /ui
 buildah config \
     --label="org.nethserver.max-per-node=1" \
+    --label="org.nethserver.min-core=3.3.0-0" \
     --label "org.nethserver.images=ghcr.io/nethserver/samba-dc:${IMAGETAG:-latest}" \
     --label 'org.nethserver.authorizations=node:fwadm ldapproxy@node:accountprovider cluster:accountprovider traefik@node:routeadm' \
     --label="org.nethserver.tcp-ports-demand=1" \

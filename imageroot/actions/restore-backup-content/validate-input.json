@@ -1,0 +1,51 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "restore-backup-content input",
+    "$id": "http://schema.nethserver.org/mail/restore-backup-content-input.json",
+    "description": "Extract content from a backup snapshot",
+    "examples": [
+        {
+            "snapshot": "b9ae143be9a5cf86fccff4bd7907296a3feb9f904457e3d521f215c5445cdac7",
+            "destination": "86d1a8ac-ef89-557a-8e19-8582ab86b7c4",
+            "repopath": "samba/8efb6625-e70f-4a5f-9cb5-2836096d5054",
+            "share": "pub",
+            "content": "Clienti/StudioV"
+        }
+    ],
+    "type": "object",
+    "required": [
+        "destination",
+        "repopath",
+        "snapshot",
+        "share",
+        "content"
+    ],
+    "properties": {
+        "destination": {
+            "type": "string",
+            "description": "The UUID of the backup destination where the Restic repository resides."
+        },
+        "repopath": {
+            "type": "string",
+            "description": "Restic repository path, under the backup destination"
+        },
+        "snapshot": {
+            "type": "string",
+            "description": "Restic snapshot ID to restore"
+        },
+        "share": {
+            "type": "string",
+            "pattern": "^[^/\\\\:><\"|?*]+$",
+            "description": "Seek the paths of this Samba share"
+        },
+        "destroot": {
+            "type": "string",
+            "pattern": "^[^/\\\\:><\"|?*]+$",
+            "description": "Name of a share root-level directory where content is restored. Existing content is removed before restoring the backup."
+        },
+        "content": {
+            "type": "string",
+            "description": "Content path to restore"
+        }
+    }
+}
