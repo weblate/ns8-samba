@@ -33,12 +33,13 @@
             :description="error.listBackupRepositories"
             :showCloseButton="false"
           />
-          <cv-grid class="mg-top-xlg mg-bottom-md no-padding">
+          <cv-grid class="mg-top-lg mg-bottom-md no-padding">
             <cv-row>
               <cv-column>
                 <BackupRepositorySelector
                   v-model="selectedRepositoryId"
                   :repositories="backupRepositories"
+                  :instanceName="instanceName"
                   :loading="loading.listBackupRepositories"
                   :light="true"
                 />
@@ -58,7 +59,7 @@
             :description="error.readBackupSnapshots"
             :showCloseButton="false"
           />
-          <cv-grid class="mg-top-xlg mg-bottom-md no-padding">
+          <cv-grid class="mg-top-lg mg-bottom-md no-padding">
             <cv-row>
               <cv-column>
                 <BackupSnapshotSelector

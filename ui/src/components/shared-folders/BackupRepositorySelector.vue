@@ -22,8 +22,16 @@
       <!-- no repositories -->
       <NsEmptyState
         v-else-if="!repositories.length"
-        :title="$t('shares.no_backup_destination')"
-      />
+        :title="$t('shares.no_backup_found')"
+      >
+        <template #description>
+          {{
+            $t("shares.no_backup_found_description", {
+              module: instanceName,
+            })
+          }}
+        </template>
+      </NsEmptyState>
       <!-- repo list -->
       <NsTile
         v-else
@@ -106,6 +114,10 @@ export default {
     },
     repositories: {
       type: Array,
+      required: true,
+    },
+    instanceName: {
+      type: String,
       required: true,
     },
     loading: {
