@@ -101,7 +101,7 @@
         "set_permissions_for_share_name": "Impostare le autorizzazioni per la cartella condivisa {name}",
         "invalid_permissions": "Permessi non validi",
         "delete_shared_folder_description": "Eliminare la cartella condivisa '{name}'? Tutti i file contenuti verranno eliminati definitivamente.",
-        "restore_file_info": "Il file o la cartella selezionata verranno ripristinati in '{restoredFolder}'. Assicurarsi che ci sia spazio sufficiente su {nodo} per evitare il fallimento del ripristino.",
+        "restore_file_info": "Il file o la cartella selezionata verranno ripristinati in '{restoredFolder}'. Assicurarsi che ci sia spazio sufficiente su {node} per evitare il fallimento del ripristino.",
         "no_snapshot_to_restore": "Nessuno snapshot da ripristinare",
         "search_file_or_folder": "Cerca file o cartella",
         "from_node_name_of_different_cluster": "Dal nodo {name} di un altro cluster",
