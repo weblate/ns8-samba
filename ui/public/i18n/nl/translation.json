@@ -208,7 +208,7 @@
         "file_server_ip_address_tooltip": "IP-adres dat aan de bestandsserver in het Active Directory-domein moet worden gekoppeld. Dit kan later niet worden gewijzigd als Samba ook een domeinprovider is en er andere domeinproviders in hetzelfde domein aanwezig zijn.",
         "step_domain_description": "Selecteer het Active Directory-domein waarvan u lid wilt worden.",
         "file_server_name_tooltip": "Unieke naam voor het Active Directory-computeraccount. Mag maximaal 15 tekens lang zijn. Deze naam wordt weergegeven in DNS en kan later niet worden gewijzigd.",
-        "realm_dc_avail_check_failed": "Active Directory domain discovery failed"
+        "realm_dc_avail_check_failed": "Detectie van Active Directory-domein mislukt"
     },
     "software_center": {
         "source_package": "App copy"
