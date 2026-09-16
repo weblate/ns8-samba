@@ -54,7 +54,7 @@ cat - >/etc/samba/smb.conf <<EOF
         netbios aliases = ${NBALIAS}
         realm = ${REALM^^}
         workgroup = ${NBDOMAIN}
-        log level = ${SAMBA_LOGLEVEL:-1}
+        log level = ${SAMBA_LOGLEVEL:-1 auth_audit:0 auth_json_audit:0}
         acl_xattr:security_acl_name = user.NTACL
         acl_xattr:ignore system acls = yes
         template homedir = ${SAMBA_HOMES_DIR:?}/%U

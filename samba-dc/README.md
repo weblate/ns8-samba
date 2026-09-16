@@ -58,8 +58,10 @@ individual command documentation for more information.
 - `SAMBA_HOMES_DIR`, default `/srv/homes`: path to the volume containing
   user home directories. Do not change it! In any case do not put it under
   `/var/lib/samba` to avoid conflicts with the backup procedure.
-- `SAMBA_LOGLEVEL`, default `1`: value for the `log level` configuration
-  directive.
+- `SAMBA_LOGLEVEL`, default `1 auth_audit:0 auth_json_audit:0`: value for the
+  `log level` configuration directive. The default silences the noisy
+  `Auth:` audit lines (every LDAP/SMB bind); set e.g. `3 auth_audit:5` to
+  temporarily raise verbosity for debugging.
 - `SERVER_ROLE`, switch the server role between `dc` (default) and `member`
 - `DNS1ADDRESS`, `DNS2ADDRESS`, set IP addresses of DNS servers for domain
   member role.

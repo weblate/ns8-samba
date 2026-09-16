@@ -44,7 +44,7 @@ COPY samba-dc/ /
 RUN mv -v /etc/samba/smb.conf /etc/samba/smb.conf.distro
 
 # Set environment variables
-ENV SAMBA_LOGLEVEL="1 auth_audit:3" \
+ENV SAMBA_LOGLEVEL="1 auth_audit:0 auth_json_audit:0" \
     SAMBA_SHARES_DIR=/srv/shares \
     SAMBA_HOMES_DIR=/srv/homes \
     SERVER_ROLE=dc \
