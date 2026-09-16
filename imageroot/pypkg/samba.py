@@ -41,6 +41,7 @@ ACTYPE = 5
 ACDISPLAY = 6
 ACMAIL = 7
 ACPWDLASTSET = 8
+ACPHONE = 9
 
 class SambaException(Exception):
     pass
@@ -289,6 +290,19 @@ def set_user_account_control(dn_str, user_account_control, no_password_expiratio
         ldbmodify_input = f'{dn_str}\nchangetype: modify\nreplace: userAccountControl\nuserAccountControl: {user_account_control}\n'
         subprocess.run(ldbmodify_cmd, input=ldbmodify_input, stdout=sys.stderr, check=True, text=True)
 
+def set_or_clear_ldap_attribute(user, attribute, value, check=True):
+    sambatool_cmd = ['podman', 'exec', '-i', 'samba-dc', 'samba-tool']
+    getdn_cmd = sambatool_cmd + ['user', 'show', user, '--attributes=dn']
+    proc = subprocess.run(getdn_cmd, check=True, capture_output=True, text=True)
+    dn = proc.stdout.strip()
+    if value:
+        ldbmodify_cmd = ['podman', 'exec', '-i', 'samba-dc', 'ldbmodify', '-i', '-H', '/var/lib/samba/private/sam.ldb']
+        ldbmodify_input = f'{dn}\nchangetype: modify\nreplace: {attribute}\n{attribute}: {value}\n'
+    else:
+        ldbmodify_cmd = ['podman', 'exec', '-i', 'samba-dc', 'ldbmodify', '-H', '/var/lib/samba/private/sam.ldb']
+        ldbmodify_input = f'{dn}\nchangetype: modify\ndelete: {attribute}\n'
+    subprocess.run(ldbmodify_cmd, input=ldbmodify_input, stdout=sys.stderr, check=check, text=True)
+
 def _filetime_to_datetime(filetime):
     """Convert a Windows FILETIME (100-nanosecond intervals since 1601-01-01 UTC) to a datetime."""
     if filetime is None or filetime <= 0:
@@ -379,6 +393,7 @@ def export_users() -> list:
             - must_change_password: Whether the user must change their password.
             - no_password_expiration: Whether the password does not expire.
             - mail (optional): The user's email address, if available.
+            - phone_extension (optional): The user's phone extension, if available.
             - groups: A sorted list of group names the user belongs to.
     Notes:
         System accounts (krbtgt, administrator, guest, ldapservice) and
@@ -403,6 +418,8 @@ def export_users() -> list:
         }
         if rec[ACMAIL]:
             out["mail"] = rec[ACMAIL]
+        if rec[ACPHONE]:
+            out["phone_extension"] = rec[ACPHONE]
         if rec[ACDISPLAY]:
             out["display_name"] = rec[ACDISPLAY]
         groups = []
@@ -427,6 +444,7 @@ def import_users(records: list, skip_existing: bool, progfunc: callable) -> bool
             - locked: Account lock status (optional)
             - groups: List of group names (optional)
             - mail: Email address (optional)
+            - phone_extension: Phone extension (optional)
             - must_change_password: Require password change at next login (optional)
             - no_password_expiration: Disable password expiration (optional)
         skip_existing: If True, skip existing users entirely; if False, update them.
@@ -464,6 +482,7 @@ def import_users(records: list, skip_existing: bool, progfunc: callable) -> bool
         display_name = rec.get('display_name')
         must_change = rec.get('must_change_password') is True
         mail_address = rec.get('mail')
+        phone_extension = rec.get('phone_extension')
 
         # Accumulate changes for userAccountControl attribute (UAC)
         uac_set_flags = 0
@@ -494,7 +513,7 @@ def import_users(records: list, skip_existing: bool, progfunc: callable) -> bool
                 import_errors += 1
                 continue # Skip further processing for this user
             udn = f'CN={user},CN=Users,' + LDAPSUFFIX # Assuming default DN
-            adb[user] = (udn, [], 512, user, [], 'U', None, None, None) # (512 = NORMAL_ACCOUNT)
+            adb[user] = (udn, [], 512, user, [], 'U', None, None, None, None) # (512 = NORMAL_ACCOUNT)
             if not display_name:
                 display_name = user.title() # Initialize displayName with the Title Case of username
 
@@ -504,7 +523,7 @@ def import_users(records: list, skip_existing: bool, progfunc: callable) -> bool
             if gna not in adb:
                 # gna must be created, initialize it:
                 if _create_group(gna):
-                    adb[gna] = (f'CN={gna},CN=Users,' + LDAPSUFFIX, [], 0, gna, [], 'G', None, None, None)
+                    adb[gna] = (f'CN={gna},CN=Users,' + LDAPSUFFIX, [], 0, gna, [], 'G', None, None, None, None)
                 else:
                     import_errors += 1
             if gna in mod_groups:
@@ -537,6 +556,10 @@ def import_users(records: list, skip_existing: bool, progfunc: callable) -> bool
             ldif_prepare(user, 'mail', None, "delete")
         elif mail_address:
             ldif_prepare(user, 'mail', mail_address)
+        if phone_extension == "" and adb[user][ACPHONE] is not None:
+            ldif_prepare(user, 'telephoneNumber', None, "delete")
+        elif phone_extension:
+            ldif_prepare(user, 'telephoneNumber', phone_extension)
         if must_change:
             ldif_prepare(user, 'pwdLastSet', 0)
         uac = adb[user][ACUAC]
@@ -645,7 +668,7 @@ class CaseInsensitiveDict(dict):
 
 def _get_accounts() -> dict:
     """Returns account information indexed by DN and sAMAccountName. Each
-    value is a tuple of 9 elements.
+    value is a tuple of 10 elements.
     """
     def v(line):
         a, w = line.split(": ", 1)
@@ -657,7 +680,7 @@ def _get_accounts() -> dict:
         return w
 
     def _make_record():
-        record = list((None,)*9)
+        record = list((None,)*10)
         record[ACGROUPS] = []
         record[ACMEMBERS] = []
         record[ACTYPE] = 'U'
@@ -706,6 +729,7 @@ def _get_accounts() -> dict:
             'objectClass',
             'pwdLastSet',
             'mail',
+            'telephoneNumber',
             'displayName',
         ], text=True, stdout=subprocess.PIPE) as proc_ldbsearch:
             record = _make_record()
@@ -743,6 +767,8 @@ def _get_accounts() -> dict:
                     record[ACDISPLAY] = v(ldifline)
                 elif ldifline.startswith("mail:"):
                     record[ACMAIL] = v(ldifline)
+                elif ldifline.startswith("telephoneNumber:"):
+                    record[ACPHONE] = v(ldifline)
                 elif ldifline.startswith("pwdLastSet:"):
                     try:
                         record[ACPWDLASTSET] = int(v(ldifline))
